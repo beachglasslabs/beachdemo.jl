@@ -47,3 +47,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build files
+public/*.css
