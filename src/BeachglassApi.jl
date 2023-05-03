@@ -1,5 +1,7 @@
-using Oxygen
+module BeachglassApi
+
 using HTTP
+using Oxygen
 using OteraEngine
 using Dates
 
@@ -23,3 +25,5 @@ end
 staticfiles("../public", "/")
 
 serve()
+
+end # module BeachglassApi
