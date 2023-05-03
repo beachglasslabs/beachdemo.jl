@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "  cd src && julia api.jl",
+    "dev": "  npm run build-css && cd src && julia -- BeachglassApi.jl",
     "build-css": "npx tailwindcss build -o public/style.css",
     "preview": "vite preview"
   },
