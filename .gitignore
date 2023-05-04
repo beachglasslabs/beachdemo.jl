@@ -50,3 +50,6 @@ dist-ssr
 
 # Build files
 public/*.css
+
+# env file with secrets
+.env
