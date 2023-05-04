@@ -46,26 +46,24 @@
             <div class="flex flex-row items-center gap-4 mt-8 justify-center">
               <div onClick="() => signIn('google', { callbackUrl: '/profiles' })"
                     class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
-                Google
+                <object type="image/svg+xml" data="img/google.svg">Google</object>
               </div>
               <div onClick="() => signIn('github', { callbackUrl: '/profiles' })"
                 class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
-                Github
+                <object type="image/svg+xml" data="img/github.svg">Github</object>
               </div>
             </div>
             <p class="text-neutral-500 mt-12" x-show="login">
               First time using Netflix?
               <span @click="login = ! login" class="text-white ml-1 hover:underline cursor-pointer" x-show="login">
-                Create an account
+                Create an account.
               </span>
-              .
             </p>
             <p class="text-neutral-500 mt-12" x-show="! login">
               Already have an account?
               <span @click="login = ! login" class="text-white ml-1 hover:underline cursor-pointer" x-show="! login">
-                Login
+                Login.
               </span>
-              .
             </p>
           </div>
         </div>
