@@ -1,4 +1,6 @@
-module BeachglassApi
+module Api
+
+include("Auth.jl")
 
 using HTTP: Middleware
 using HTTP
@@ -8,53 +10,13 @@ using Dates
 using Umbrella
 import URIs
 
-const PORT = 3000
-const SERVER_URL = "http://localhost:" * string(PORT)
-const AUTH_URL = "/auth"
+using .Init
+using .Auth
 
 const PROTECTED_URLS = [ "/", "/profiles" ]
 
-function readenv(env=".env")
-    open(env, "r") do f
-        while !eof(f)
-            line = strip(readline(f))
-            if isempty(line)
-                continue
-            end
-            name, value = split(line, "=") 
-            if isempty(name) || isempty(value)
-                continue
-            end
-            ENV[strip(name)] = strip(value)
-        end
-    end
-    println("Loaded env from $(pwd() * "/" * env)")
-end
-
-readenv()
-
-const google_options = Configuration.Options(;
-    client_id = ENV["GOOGLE_ID"],
-    client_secret = ENV["GOOGLE_SECRET"],
-    redirect_uri = SERVER_URL * "/api/auth/callback/google",
-    success_redirect = "/",
-    failure_redirect = AUTH_URL,
-    scopes = ["profile", "openid", "email"],
-)
-const google_oauth2 = init(:google, google_options)
-
-const github_options = Configuration.Options(;
-    client_id = ENV["GITHUB_ID"],
-    client_secret = ENV["GITHUB_SECRET"],
-    redirect_uri = SERVER_URL * "/api/auth/callback/github",
-    success_redirect = "/",
-    failure_redirect = AUTH_URL,
-    scopes = ["user", "email", "profile"],
-)
-const github_oauth2 = init(:github, github_options)
-
 const CORS_HEADERS = [
-    "Access-Control-Allow-Origin" => "*",
+    "Access-Control-Allow-Origin" => SERVER_URL,
     "Access-Control-Allow-Headers" => "*",
     "Access-Control-Allow-Methods" => "POST, GET, OPTIONS"
 ]
@@ -152,4 +114,4 @@ staticfiles("public", "/")
 # set application level middleware
 serve(port=PORT, middleware=[CorsMiddleware, AuthMiddleware])
 
-end # module BeachglassApi
+end # module Api
