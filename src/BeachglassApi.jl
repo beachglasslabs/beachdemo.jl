@@ -1,10 +1,18 @@
 module BeachglassApi
 
+using HTTP: Middleware
 using HTTP
 using Oxygen
 using OteraEngine
 using Dates
 using Umbrella
+import URIs
+
+const PORT = 3000
+const SERVER_URL = "http://localhost:" * string(PORT)
+const AUTH_URL = "/auth"
+
+const PROTECTED_URLS = [ "/", "/profiles" ]
 
 function readenv(env=".env")
     open(env, "r") do f
@@ -28,9 +36,9 @@ readenv()
 const google_options = Configuration.Options(;
     client_id = ENV["GOOGLE_ID"],
     client_secret = ENV["GOOGLE_SECRET"],
-    redirect_uri = "http://localhost:3000/api/auth/callback/google",
+    redirect_uri = SERVER_URL * "/api/auth/callback/google",
     success_redirect = "/",
-    failure_redirect = "/auth",
+    failure_redirect = AUTH_URL,
     scopes = ["profile", "openid", "email"],
 )
 const google_oauth2 = init(:google, google_options)
@@ -38,12 +46,42 @@ const google_oauth2 = init(:google, google_options)
 const github_options = Configuration.Options(;
     client_id = ENV["GITHUB_ID"],
     client_secret = ENV["GITHUB_SECRET"],
-    redirect_uri = "http://localhost:3000/api/auth/callback/github",
+    redirect_uri = SERVER_URL * "/api/auth/callback/github",
     success_redirect = "/",
-    failure_redirect = "/auth",
+    failure_redirect = AUTH_URL,
     scopes = ["user", "email", "profile"],
 )
 const github_oauth2 = init(:github, github_options)
+
+const CORS_HEADERS = [
+    "Access-Control-Allow-Origin" => "*",
+    "Access-Control-Allow-Headers" => "*",
+    "Access-Control-Allow-Methods" => "POST, GET, OPTIONS"
+]
+
+# https://juliaweb.github.io/HTTP.jl/stable/examples/#Cors-Server
+function CorsMiddleware(handler)
+    return function(req::HTTP.Request)
+        # determine if this is a pre-flight request from the browser
+        if HTTP.method(req) == "OPTIONS"
+            return HTTP.Response(200, CORS_HEADERS)  
+        else 
+            return handler(req) # passes the request to the AuthMiddleware
+        end
+    end
+end
+
+function AuthMiddleware(handler)
+    return function(req::HTTP.Request)
+        # ** NOT an actual security check ** #
+        path = URIs.URI(req.target).path
+        if !HTTP.headercontains(req, "Authorization", "true") && any(map(x -> x == path, PROTECTED_URLS))
+            return HTTP.Response(302, [ "Location" => SERVER_URL * AUTH_URL ])
+        else 
+            return handler(req) # passes the request to your application
+        end
+    end
+end
 
 @get "/" function(req::HTTP.Request)
     tmp = Template("./src/templates/index.html")
@@ -58,14 +96,12 @@ end
 
 @get "/oauth2/google" function(req::HTTP.Request)
     println("redirect google auth")
-    return google_oauth2.redirect()
-    println("google auth redirected")
+    google_oauth2.redirect()
 end
 
 @get "/oauth2/github" function(req::HTTP.Request)
     println("redirect github auth")
-    return github_oauth2.redirect()
-    println("github auth redirected")
+    github_oauth2.redirect()
 end
 
 @get "/api/auth/callback/google" function(req::HTTP.Request)
@@ -113,6 +149,7 @@ end
 
 staticfiles("public", "/")
 
-serve(port=3000)
+# set application level middleware
+serve(port=PORT, middleware=[CorsMiddleware, AuthMiddleware])
 
 end # module BeachglassApi
