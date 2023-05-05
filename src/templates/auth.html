@@ -12,7 +12,6 @@
     <link rel="manifest" href="/site.webmanifest">
     <title>Beachglass TV</title>
     <script src="https://unpkg.com/htmx.org@1.9.2" integrity="sha384-L6OqL9pRWyyFU3+/bjdSri+iIphTN/bvYyM37tICVyOJkWZLpP2vGn6VUEXgzg6h" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/alpinejs-component@latest/dist/component.min.js" defer></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
     <link rel="stylesheet" href="style.css">
   </head>
@@ -41,16 +40,14 @@
                 </div>
               </template>
             </div>
-            <button hx-get="/login" class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-show="login">Login</button>
-            <button hx-get="/register" class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-show="!login">Sign up</button>
+            <button @click="location.href = '/login'" class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-show="login">Login</button>
+            <button @click="location.href = '/register'" class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-show="!login">Sign up</button>
             <div class="flex flex-row items-center gap-4 mt-8 justify-center">
-              <div onClick="() => signIn('google', { callbackUrl: '/profiles' })"
-                    class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
-                <object type="image/svg+xml" data="img/google.svg">Google</object>
+              <div @click="location.href = '/oauth2/google'" class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
+                <img src="img/google.svg" alt="Google">
               </div>
-              <div onClick="() => signIn('github', { callbackUrl: '/profiles' })"
-                class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
-                <object type="image/svg+xml" data="img/github.svg">Github</object>
+              <div @click="location.href = '/oauth2/github'" class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
+                <img src="img/github.svg" alt="Github">
               </div>
             </div>
             <p class="text-neutral-500 mt-12" x-show="login">
