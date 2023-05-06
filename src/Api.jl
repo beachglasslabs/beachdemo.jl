@@ -2,7 +2,7 @@ module Api
 
 include("Auth.jl")
 
-using HTTP: Middleware
+using HTTP: Middleware, Cookies
 using HTTP
 using Oxygen
 using OteraEngine
@@ -48,11 +48,21 @@ function CorsMiddleware(handler)
     end
 end
 
+function getCookieToken(req::HTTP.Request)
+    for cookie in Cookies.cookies(req)
+        if cookie.name == "token"
+            println("found token=$(cookie.value)")
+            return cookie.value
+        end
+    end
+    return Nothing
+end
+
 function AuthMiddleware(handler)
     return function(req::HTTP.Request)
         # ** NOT an actual security check ** #
         path = URIs.URI(req.target).path
-        if !HTTP.headercontains(req, "Authorization", "true") && any(map(x -> x == path, PROTECTED_URLS))
+        if getCookieToken(req) == Nothing && any(map(x -> x == path, PROTECTED_URLS))
             return HTTP.Response(302, [ "Location" => SERVER_URL * AUTH_URL ])
         else 
             return handler(req) # passes the request to your application
@@ -91,6 +101,12 @@ end
             println(tokens.access_token)
             println(tokens.refresh_token)
             println(user.email)
+            if haskey(users, user.email)
+                users[user.email].jwt = tokens.access_token
+            else
+                users[User(user.given_name, user.email, "")].jwt = tokens.access_token
+            end
+            return HTTP.Response(302, ["Set-Cookie" => "token=$(tokens.access_token)", "Location" => "/"])
         end
     )
 end
@@ -104,7 +120,11 @@ end
         function (tokens::GitHub.Tokens, user::GitHub.User)
             println(tokens.access_token)
             println(user.name)
-            println(user)
+            if haskey(users, user.email)
+                users[user.email].jwt = tokens.access_token
+            else
+                users[User(user.name, user.email, "")].jwt = tokens.access_token
+            end
         end
     )
 end
@@ -118,41 +138,40 @@ end
 
 @post "/login" function(req::HTTP.Request)
     current = json(req, User)
-    println("user = $(current)")
-    if isempty(current.email) || isempty(current.password)
-        return HTTP.Response(301, ["Location" => AUTH_URL])
+    if isnothing(current) || isempty(current.email) || isempty(current.password)
+        return HTTP.Response(302, ["Location" => AUTH_URL])
     end
-    println("logging in $(current)")
     if haskey(users, current.email)
         user = users[current.email]
         if user.user.password == current.password
             println("jwt = $(user.jwt)")
-            return HTTP.Response(301, ["Authorization" => "Bearer $(user.jwt)", "Location" => "/"])
+            #return Dict("token" => user.jwt)
+            return HTTP.Response(302, ["Set-Cookie" => "token=$(user.jwt)", "Location" => "/"])
         end
     end
-    return HTTP.Response(301, ["Location" => AUTH_URL])
+    return HTTP.Response(302, ["Location" => AUTH_URL])
 end
 
 @post "/register" function(req::HTTP.Request)
     new = json(req, User)
-    println("user = $(new)")
-    if isempty(new.email) || isempty(new.password)
-        return HTTP.Response(301, ["Location" => AUTH_URL])
+    if isnothing(new) || isempty(new.email) || isempty(new.password)
+        return HTTP.Response(302, ["Location" => AUTH_URL])
     end
     println("registering $(new)")
     if haskey(users, new.email)
         println("re-registering existing $(new)")
         user = users[new.email]
         println("jwt = $(user.jwt)")
-        return HTTP.Response(301, ["Authorization" => "Bearer $(user.jwt)", "Location" => "/"])
+        #return Dict("token" => user.jwt)
+        return HTTP.Response(302, ["Set-Cookie" => "token=$(user.jwt)", "Location" => "/"])
     end
-    claims = Dict("sub" => new.email, "name" => new.name, "iat" => datetime2unix(now()))
+    claims = Dict("sub" => new.email, "email" => new.email, "iat" => datetime2unix(now()))
     encoding = JSONWebTokens.HS256(ENV["AUTH_JWT_SECRET"])
     jwt = JSONWebTokens.encode(encoding, claims)
     user = User(new.name, new.email, new.password)
     users[user.email] = AuthUser(user, jwt)
     println("jwt = $(jwt)")
-    return HTTP.Response(301, ["Authorization" => "Bearer $(jwt)", "Location" => "/"])
+    return HTTP.Response(302, ["Set-Cookie" => "token=$(jwt)", "Location" => "/"])
 end
 
 staticfiles("public", "/")

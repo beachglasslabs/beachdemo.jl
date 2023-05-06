@@ -44,12 +44,6 @@
             })
             .then((resp) => {
               this.message = 'Form successfully submitted!'
-              if (resp.headers.has('Authorization')) {
-                  console.log("got authorization header from resp " + resp.headers.get('Authorization'))
-                  localStorage.setItem('Authorization', resp.headers.get('Authorization'))
-              } else {
-                  console.dir(resp.headers)
-              }
             })
             .catch(() => {
               this.message = 'Oops! Something went wrong!'
@@ -66,7 +60,7 @@
           <img src="/img/logo.png" alt="Logo" class="h-12" />
         </nav>
         <div class="flex justify-center">
-          <form :action="getUrl()" method="POST" class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full" x-data="authForm()" @submit.prevent="submitData">
+          <form :action="getUrl()" method="POST" class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full" x-data="authForm()" @submit="submitData">
             <h2 class="text-white text-4xl mb-8 font-semibold" x-show="login" x-cloak>Sign in</h2>
             <h2 class="text-white text-4xl mb-8 font-semibold" x-show="!login" x-cloak>Register</h2>
             <div class="flex flex-col gap-4">
