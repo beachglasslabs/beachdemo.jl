@@ -9,6 +9,8 @@ using OteraEngine
 using Dates
 using Umbrella
 import URIs
+using JSONWebTokens
+using StructTypes
 
 using .Init
 using .Auth
@@ -20,6 +22,19 @@ const CORS_HEADERS = [
     "Access-Control-Allow-Headers" => "*",
     "Access-Control-Allow-Methods" => "POST, GET, OPTIONS"
 ]
+
+mutable struct User
+    name::String
+    email::String
+    password::String
+end
+
+mutable struct AuthUser
+    user::User
+    jwt::String
+end
+
+users = Dict{String, AuthUser}()
 
 # https://juliaweb.github.io/HTTP.jl/stable/examples/#Cors-Server
 function CorsMiddleware(handler)
@@ -102,11 +117,42 @@ end
 end
 
 @post "/login" function(req::HTTP.Request)
-    println("login not implemented yet")
+    current = json(req, User)
+    println("user = $(current)")
+    if isempty(current.email) || isempty(current.password)
+        return HTTP.Response(301, ["Location" => AUTH_URL])
+    end
+    println("logging in $(current)")
+    if haskey(users, current.email)
+        user = users[current.email]
+        if user.user.password == current.password
+            println("jwt = $(user.jwt)")
+            return HTTP.Response(301, ["Authorization" => "Bearer $(user.jwt)", "Location" => "/"])
+        end
+    end
+    return HTTP.Response(301, ["Location" => AUTH_URL])
 end
 
 @post "/register" function(req::HTTP.Request)
-    println("register not implemented yet")
+    new = json(req, User)
+    println("user = $(new)")
+    if isempty(new.email) || isempty(new.password)
+        return HTTP.Response(301, ["Location" => AUTH_URL])
+    end
+    println("registering $(new)")
+    if haskey(users, new.email)
+        println("re-registering existing $(new)")
+        user = users[new.email]
+        println("jwt = $(user.jwt)")
+        return HTTP.Response(301, ["Authorization" => "Bearer $(user.jwt)", "Location" => "/"])
+    end
+    claims = Dict("sub" => new.email, "name" => new.name, "iat" => datetime2unix(now()))
+    encoding = JSONWebTokens.HS256(ENV["AUTH_JWT_SECRET"])
+    jwt = JSONWebTokens.encode(encoding, claims)
+    user = User(new.name, new.email, new.password)
+    users[user.email] = AuthUser(user, jwt)
+    println("jwt = $(jwt)")
+    return HTTP.Response(301, ["Authorization" => "Bearer $(jwt)", "Location" => "/"])
 end
 
 staticfiles("public", "/")

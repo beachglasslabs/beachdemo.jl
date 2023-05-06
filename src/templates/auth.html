@@ -14,22 +14,62 @@
     <script src="https://unpkg.com/htmx.org@1.9.2" integrity="sha384-L6OqL9pRWyyFU3+/bjdSri+iIphTN/bvYyM37tICVyOJkWZLpP2vGn6VUEXgzg6h" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
     <link rel="stylesheet" href="style.css">
+    <script>
+      function authForm() {
+        return {
+          authData: {
+            name: '',
+            email: '',
+            password: '',
+          },
+          message: '',
+          login: true,
+          getUrl() {
+            return url = 'http://localhost:3000/' + (this.login ? 'login' : 'register')
+          },
+          inputs: [ { id: 'name', type: 'text', label: 'Name' , value: '' },
+                    { id: 'email', type: 'email', label: 'Email address or phone number', value: '' },
+                    { id: 'password', type: 'password', label: 'Password', value: ''}
+          ],
+          submitData() {
+            this.message = ''
+            this.authData.name = this.inputs[0].value
+            this.authData.email = this.inputs[1].value
+            this.authData.password = this.inputs[2].value
+
+            fetch(this.getUrl(), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(this.authData),
+            })
+            .then((resp) => {
+              this.message = 'Form successfully submitted!'
+              if (resp.headers.has('Authorization')) {
+                  console.log("got authorization header from resp " + resp.headers.get('Authorization'))
+                  localStorage.setItem('Authorization', resp.headers.get('Authorization'))
+              } else {
+                  console.dir(resp.headers)
+              }
+            })
+            .catch(() => {
+              this.message = 'Oops! Something went wrong!'
+            })
+          }
+        }
+      }
+    </script>
   </head>
   <body>
     <div class="relative h-full w-full bg-[url('/img/hero.jpg')] bg-no-repeat bg-center bg-fixed bg-cover">
-      <div x-data="{ login: true }" class="bg-black w-full h-full lg:bg-opacity-50">
+      <div class="bg-black w-full h-full lg:bg-opacity-50">
         <nav class="px-12 py-5">
           <img src="/img/logo.png" alt="Logo" class="h-12" />
         </nav>
         <div class="flex justify-center">
-          <div class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full">
-            <h2 class="text-white text-4xl mb-8 font-semibold" x-show="login">Sign in</h2>
-            <h2 class="text-white text-4xl mb-8 font-semibold" x-show="!login">Register</h2>
-            <div class="flex flex-col gap-4" x-data="{ inputs: [
-                                            { id: 'name', type: 'text', label: 'Username', value: '' },
-                                            { id: 'email', type: 'email', label: 'Email address or phone number', value: '' },
-                                            { id: 'password', type: 'password', label: 'Password', value: '' }
-                                            ] }">
+          <form :action="getUrl()" method="POST" class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full" x-data="authForm()" @submit.prevent="submitData">
+            <h2 class="text-white text-4xl mb-8 font-semibold" x-show="login" x-cloak>Sign in</h2>
+            <h2 class="text-white text-4xl mb-8 font-semibold" x-show="!login" x-cloak>Register</h2>
+            <div class="flex flex-col gap-4">
               <template x-for="item in inputs" :key="item.id">
                 <div class="relative" x-show="item.id !== 'name' || !login">
                   <input x-model="item.value" :type="item.type" :id="item.id"
@@ -40,8 +80,8 @@
                 </div>
               </template>
             </div>
-            <button @click="location.href = '/login'" class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-show="login">Login</button>
-            <button @click="location.href = '/register'" class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-show="!login">Sign up</button>
+            <button class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-show="login" x-cloak>Login</button>
+            <button class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-show="!login" x-cloak>Sign up</button>
             <div class="flex flex-row items-center gap-4 mt-8 justify-center">
               <div @click="location.href = '/oauth2/google'" class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
                 <img src="img/google.svg" alt="Google">
@@ -62,7 +102,8 @@
                 Login.
               </span>
             </p>
-          </div>
+            <p x-text="message" x-show="message !== ''" class="text-white mt-12"></p>
+          </form>
         </div>
       </div>
     </div>
