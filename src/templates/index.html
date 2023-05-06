@@ -15,20 +15,42 @@
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <div id="app">
-      <div class="flex justify-center items-center min-h-screen">
-        <div class="bg-green-700 p-8 text-3xl rounded-2xl shadow-2xl">
-          ```
-          time
-          ```
-          <h1>blah</h1>
-          <p>
-          ```
-          3 * 5
-          ```
-          </p>
+    <div>
+      <nav class="w-full fixed z-40">
+        <div class={`px-4 md:px-16 py-6 flex flex-row items-center transition duration-500 ${showBackground ? 'bg-zinc-900 bg-opacity-90' : '' }`}>
+          <img class="h-4 lg:h-7" src="img/logo.png" alt="Logo" />
+          <div class="flex-row ml-8 gap-7 hidden lg:flex" x-data="{items: [{label: 'Home', active: true},
+                {label: 'Series'}, {label: 'Films'}, {label: 'New & Popular'},
+                {label: 'My List'}, {label: 'Browse by languages'}]}"
+          >
+            <template x-for="item in items" :key="item.id">
+              <div class={active ? 'text-white cursor-default' : 'text-gray-200 hover:text-gray-300 cursor-pointer transition'} x-text="item.label">
+              </div>
+            </template>
+          </div>
+          <div onClick={toggleMobileMenu} class="lg:hidden flex flex-row items-center gap-2 ml-8 cursor-pointer relative">
+              <p class="text-white text-sm">Browse</p>
+              <BsChevronDown class={`w-4 text-white fill-white transition ${showMobileMenu ? 'rotate-180' : 'rotate-0'}`} />
+              <MobileMenu visible={showMobileMenu} />
+          </div>
+          <div class="flex flex-row ml-auto gap-7 items-center">
+              <div class="text-gray-200 hover:text-gray-300 cursor-pointer transition">
+                  <BsSearch class="w-6" />
+              </div>
+              <div class="text-gray-200 hover:text-gray-300 cursor-pointer transition">
+                  <BsBell class="w-6" />
+              </div>
+
+              <div onClick={toggleAccountMenu} class="flex flex-row items-center gap2 cursor-pointer relative">
+                  <div class="w-6 h-6 lg:w-10 lg:h-10 rounded-md overflow-hidden">
+                      <img src="img/default-blue.png" alt="Profile" />
+                  </div>
+                  <BsChevronDown class={`w-4 text-white fill-white transition ${showAccountMenu ? 'rotate-180' : 'rotate-0'}`} />
+                  <AccountMenu visible={showAccountMenu} />
+              </div>
+          </div>
         </div>
-      </div>
+      </nav>
     </div>
   </body>
 </html>
