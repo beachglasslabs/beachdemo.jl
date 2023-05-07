@@ -16,38 +16,61 @@
   </head>
   <body>
     <div>
-      <nav class="w-full fixed z-40">
-        <div class={`px-4 md:px-16 py-6 flex flex-row items-center transition duration-500 ${showBackground ? 'bg-zinc-900 bg-opacity-90' : '' }`}>
+      <nav class="w-full fixed z-40" x-data="{ background: false, mobile: false, account: false }">
+        <div class="px-4 md:px-16 py-6 flex flex-row items-center transition duration-500" :class="background ? 'bg-zinc-900 bg-opacity-90' : ''">
           <img class="h-4 lg:h-7" src="img/logo.png" alt="Logo" />
-          <div class="flex-row ml-8 gap-7 hidden lg:flex" x-data="{items: [{label: 'Home', active: true},
-                {label: 'Series'}, {label: 'Films'}, {label: 'New & Popular'},
-                {label: 'My List'}, {label: 'Browse by languages'}]}"
-          >
+          <div class="flex-row ml-8 gap-7 hidden lg:flex" x-data="{items: [
+                {label: 'Home', active: true},
+                {label: 'Series'},
+                {label: 'Films'},
+                {label: 'New & Popular'},
+                {label: 'My List'},
+                {label: 'Browse by languages'}
+          ]}">
             <template x-for="item in items" :key="item.id">
-              <div class={active ? 'text-white cursor-default' : 'text-gray-200 hover:text-gray-300 cursor-pointer transition'} x-text="item.label">
+              <div :class="item.active ? 'text-white cursor-default' : 'text-gray-200 hover:text-gray-300 cursor-pointer transition'" x-text="item.label">
               </div>
             </template>
           </div>
-          <div onClick={toggleMobileMenu} class="lg:hidden flex flex-row items-center gap-2 ml-8 cursor-pointer relative">
-              <p class="text-white text-sm">Browse</p>
-              <BsChevronDown class={`w-4 text-white fill-white transition ${showMobileMenu ? 'rotate-180' : 'rotate-0'}`} />
-              <MobileMenu visible={showMobileMenu} />
+          <div @click="mobile = !mobile" class="lg:hidden flex flex-row items-center gap-2 ml-8 cursor-pointer relative">
+            <p class="text-white text-sm">Browse</p>
+            <BsChevronDown class={`w-4 text-white fill-white transition ${showMobileMenu ? 'rotate-180' : 'rotate-0'}`} />
+            <div x-show="mobile" class="bg-black w-56 absolute top-8 left-0 py-5 flex-col border-2 border-gray-800 flex">
+              <div class="flex flex-col gap-4" />
+                <template x-for="item in items" :key="item.id">
+                  <div class="px-3 text-center" :class="item.active ? 'text-white cursor-default' : 'text-gray-200 hover:underline cursor-pointer transition'" x-text="item.label">
+                  </div>
+                </template>
+              </div>
+            </div>
           </div>
           <div class="flex flex-row ml-auto gap-7 items-center">
-              <div class="text-gray-200 hover:text-gray-300 cursor-pointer transition">
-                  <BsSearch class="w-6" />
+            <div class="text-gray-200 hover:text-gray-300 cursor-pointer transition">
+              <BsSearch class="w-6" />
+            </div>
+            <div class="text-gray-200 hover:text-gray-300 cursor-pointer transition">
+              <BsBell class="w-6" />
+            </div>
+            <div @click="account = !account" class="flex flex-row items-center gap2 cursor-pointer relative">
+              <div class="w-6 h-6 lg:w-10 lg:h-10 rounded-md overflow-hidden">
+                <img src="img/default-blue.png" alt="Profile" />
               </div>
-              <div class="text-gray-200 hover:text-gray-300 cursor-pointer transition">
-                  <BsBell class="w-6" />
-              </div>
-
-              <div onClick={toggleAccountMenu} class="flex flex-row items-center gap2 cursor-pointer relative">
-                  <div class="w-6 h-6 lg:w-10 lg:h-10 rounded-md overflow-hidden">
-                      <img src="img/default-blue.png" alt="Profile" />
+              <BsChevronDown class="w-4 text-white fill-white transition" :class="account ? 'rotate-180' : 'rotate-0'" />
+              <div x-show="account" class="bg-black w-56 absolute top-14 right-0 py-5 flex-col border-2 border-gray-800 flex">
+                <div class="flex flex-col gap-3">
+                  <div class="px-3 group/item flex flex-row gap-3 item-center w-full">
+                    <img class="w-8 rounded-md" src="img/default-blue.png" alt="">
+                    <p class="text-white text-sm group-hover/item:userline">
+                      {{name}}
+                    </p>
                   </div>
-                  <BsChevronDown class={`w-4 text-white fill-white transition ${showAccountMenu ? 'rotate-180' : 'rotate-0'}`} />
-                  <AccountMenu visible={showAccountMenu} />
+                  <hr class="bg-gray-600 border-0 h-px my-4" />
+                  <div @click="() => signOut()" class="px-3 text-center text-white text-sm hover:underline">
+                    Sign out of Netflix
+                  </div>
+                </div>
               </div>
+            </div>
           </div>
         </div>
       </nav>
