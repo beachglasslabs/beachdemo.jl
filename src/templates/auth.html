@@ -61,8 +61,7 @@
         </nav>
         <div class="flex justify-center">
           <form :action="getUrl()" method="POST" class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full" x-data="authForm()" @submit="submitData">
-            <h2 class="text-white text-4xl mb-8 font-semibold" x-show="login" x-cloak>Sign in</h2>
-            <h2 class="text-white text-4xl mb-8 font-semibold" x-show="!login" x-cloak>Register</h2>
+            <h2 class="text-white text-4xl mb-8 font-semibold" x-text="login ? 'Sign in' : 'Register'">Sign in</h2>
             <div class="flex flex-col gap-4">
               <template x-for="item in inputs" :key="item.id">
                 <div class="relative" x-show="item.id !== 'name' || !login">
@@ -74,8 +73,7 @@
                 </div>
               </template>
             </div>
-            <button class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-show="login" x-cloak>Login</button>
-            <button class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-show="!login" x-cloak>Sign up</button>
+            <button class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-text="login ? 'Login' : 'Sign up'"></button>
             <div class="flex flex-row items-center gap-4 mt-8 justify-center">
               <div @click="location.href = '/oauth2/google'" class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
                 <img src="img/google.svg" alt="Google">
@@ -84,17 +82,9 @@
                 <img src="img/github.svg" alt="Github">
               </div>
             </div>
-            <p class="text-neutral-500 mt-12" x-show="login">
-              First time using Netflix?
-              <span @click="login = ! login" class="text-white ml-1 hover:underline cursor-pointer" x-show="login">
-                Create an account.
-              </span>
-            </p>
-            <p class="text-neutral-500 mt-12" x-show="! login">
-              Already have an account?
-              <span @click="login = ! login" class="text-white ml-1 hover:underline cursor-pointer" x-show="! login">
-                Login.
-              </span>
+            <p class="text-neutral-500 mt-12">
+              <span x-text="login ? 'First time using Beachglass?' : 'Already have an account?'"></span>
+              <span @click="login = ! login" class="text-white ml-1 hover:underline cursor-pointer" x-text="login ? 'Create an account' : 'Login'"></span>.
             </p>
             <p x-text="message" x-show="message !== ''" class="text-white mt-12"></p>
           </form>

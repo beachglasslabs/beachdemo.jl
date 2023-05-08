@@ -167,7 +167,7 @@ end
         return HTTP.Response(302, ["Location" => AUTH_URL])
     end
     tmp = Template("./src/templates/profiles.html")
-    init = Dict("name" => current.user.name, "img" => current.avatar)
+    init = Dict("name" => current.user.name, "image" => current.avatar)
     return html(tmp(init))
 end
 
