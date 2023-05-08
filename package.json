@@ -1,12 +1,13 @@
 {
   "name": "beachglass.tv",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "  npm run build-css && julia --project=. -- src/Api.jl",
-    "build-css": "npx tailwindcss build -o public/style.css",
-    "preview": "vite preview"
+    "serve": "julia --project=. -- src/Api.jl",
+    "dev-css": "npm run build-css -- --watch",
+    "build-css": "npx tailwindcss build -i src/css/main.css -o public/style.css",
+    "dev": "npm run build-css && npm run serve"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",

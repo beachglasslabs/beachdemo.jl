@@ -17,8 +17,8 @@
   </head>
   <body>
     <div>
-      <nav class="w-full fixed z-40" x-data="{ background: false, mobile: false, account: false, menu: [
-                { id: 1, label: 'Home', active: true },
+      <nav class="w-full fixed z-40" x-data="{ background: false, mobile: false, account: false, active: 1, menu: [
+                { id: 1, label: 'Home' },
                 { id: 2, label: 'Series' },
                 { id: 3, label: 'Films' },
                 { id: 4, label: 'New & Popular' },
@@ -31,7 +31,7 @@
           <img class="h-4 lg:h-7" src="img/logo.png" alt="Logo">
           <div class="flex-row ml-8 gap-7 hidden lg:flex">
             <template x-for="item in menu" :key="item.id">
-              <div :class="item.active ? 'text-white cursor-default' : 'text-gray-200 hover:text-gray-300 cursor-pointer transition'" x-text="item.label">
+              <div @click="active = item.id" :class="item.id == active ? 'text-white cursor-default' : 'text-gray-200 hover:text-gray-300 cursor-pointer transition'" x-text="item.label">
               </div>
             </template>
           </div>
@@ -41,7 +41,7 @@
             <div x-show="mobile" class="bg-black w-56 absolute top-8 left-0 py-5 flex-col border-2 border-gray-800 flex">
               <div class="flex flex-col gap-4">
                 <template x-for="item in menu" :key="item.id">
-                  <div class="px-3 text-center" :class="item.active ? 'text-white cursor-default' : 'text-gray-200 hover:underline cursor-pointer transition'" x-text="item.label">
+                  <div @click="active = item.id" class="px-3 text-center" :class="item.id == active ? 'text-white cursor-default' : 'text-gray-200 hover:underline cursor-pointer transition'" x-text="item.label">
                   </div>
                 </template>
               </div>
@@ -61,7 +61,7 @@
               <img src="img/bschevrondown.svg" class="w-4 text-white fill-white transition" :class="account ? 'rotate-180' : 'rotate-0'">
               <div x-show="account" class="bg-black w-56 absolute top-14 right-0 py-5 flex-col border-2 border-gray-800 flex" x-cloak>
                 <div class="flex flex-col gap-3">
-                  <div class="px-3 group/item flex flex-row gap-3 item-center w-full">
+                  <div @click="location.href='/profiles'" class="px-3 group/item flex flex-row gap-3 item-center w-full">
                     <img draggable="false" class="w-8 rounded-md" src="```avatar```" alt="Profile">
                     <p class="text-white text-sm group-hover/item:userline">
                       ```name```
