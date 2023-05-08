@@ -12,22 +12,25 @@
     <link rel="manifest" href="/site.webmanifest">
     <title>Beachglass TV</title>
     <script src="https://unpkg.com/htmx.org@1.9.2" integrity="sha384-L6OqL9pRWyyFU3+/bjdSri+iIphTN/bvYyM37tICVyOJkWZLpP2vGn6VUEXgzg6h" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/alpinejs" defer></script>
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <div>
-      <nav class="w-full fixed z-40" x-data="{ background: false, mobile: false, account: false }">
+      <nav class="w-full fixed z-40" x-data="{ background: false, mobile: false, account: false, menu: [
+                { id: 1, label: 'Home', active: true },
+                { id: 2, label: 'Series' },
+                { id: 3, label: 'Films' },
+                { id: 4, label: 'New & Popular' },
+                { id: 5, label: 'My List' },
+                { id: 6, label: 'Browse by languages' }
+          ],
+        }"
+      >
         <div class="px-4 md:px-16 py-6 flex flex-row items-center transition duration-500" :class="background ? 'bg-zinc-900 bg-opacity-90' : ''">
           <img class="h-4 lg:h-7" src="img/logo.png" alt="Logo">
-          <div class="flex-row ml-8 gap-7 hidden lg:flex" x-data="{items: [
-                {label: 'Home', active: true},
-                {label: 'Series'},
-                {label: 'Films'},
-                {label: 'New & Popular'},
-                {label: 'My List'},
-                {label: 'Browse by languages'}
-          ]}">
-            <template x-for="item in items" :key="item.id">
+          <div class="flex-row ml-8 gap-7 hidden lg:flex">
+            <template x-for="item in menu" :key="item.id">
               <div :class="item.active ? 'text-white cursor-default' : 'text-gray-200 hover:text-gray-300 cursor-pointer transition'" x-text="item.label">
               </div>
             </template>
@@ -37,7 +40,7 @@
             <img src="img/bschevrondown.svg" alt="Google" class="w-4 text-white fill-white transition" :class="mobile ? 'rotate-180' : 'rotate-0'">
             <div x-show="mobile" class="bg-black w-56 absolute top-8 left-0 py-5 flex-col border-2 border-gray-800 flex">
               <div class="flex flex-col gap-4">
-                <template x-for="item in items" :key="item.id">
+                <template x-for="item in menu" :key="item.id">
                   <div class="px-3 text-center" :class="item.active ? 'text-white cursor-default' : 'text-gray-200 hover:underline cursor-pointer transition'" x-text="item.label">
                   </div>
                 </template>
@@ -53,10 +56,10 @@
             </div>
             <div @click="account = !account" class="flex flex-row items-center gap2 cursor-pointer relative">
               <div class="w-6 h-6 lg:w-10 lg:h-10 rounded-md overflow-hidden">
-                <img src="img/default-blue.png" alt="Profile" />
+                <img src="img/default-blue.png" alt="Profile">
               </div>
               <img src="img/bschevrondown.svg" class="w-4 text-white fill-white transition" :class="account ? 'rotate-180' : 'rotate-0'">
-              <div x-show="account" class="bg-black w-56 absolute top-14 right-0 py-5 flex-col border-2 border-gray-800 flex">
+              <div x-show="account" class="bg-black w-56 absolute top-14 right-0 py-5 flex-col border-2 border-gray-800 flex" x-cloak>
                 <div class="flex flex-col gap-3">
                   <div class="px-3 group/item flex flex-row gap-3 item-center w-full">
                     <img draggable="false" class="w-8 rounded-md" src="```avatar```" alt="Profile">

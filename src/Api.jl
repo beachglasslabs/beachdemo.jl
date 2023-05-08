@@ -62,7 +62,6 @@ function getCurrentUser(req::HTTP.Request)
     if !isnothing(token)
         for user in values(users)
             if token == user.jwt
-                println("current user = $(user)")
                 return user
             end
         end
