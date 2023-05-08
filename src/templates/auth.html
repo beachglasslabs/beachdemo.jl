@@ -44,10 +44,12 @@
             })
             .then((resp) => {
               this.message = 'Form successfully submitted!'
+              location.href='/'
             })
             .catch(() => {
               this.message = 'Oops! Something went wrong!'
             })
+            return true
           }
         }
       }
@@ -60,7 +62,7 @@
           <img src="img/logo.png" alt="Logo" class="h-12" />
         </nav>
         <div class="flex justify-center">
-          <form :action="getUrl()" method="POST" class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full" x-data="authForm()" @submit="submitData">
+          <form :action="getUrl()" method="POST" class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full" x-data="authForm()" @submit.prevent="submitData">
             <h2 class="text-white text-4xl mb-8 font-semibold" x-text="login ? 'Sign in' : 'Register'">Sign in</h2>
             <div class="flex flex-col gap-4">
               <template x-for="item in inputs" :key="item.id">
@@ -75,10 +77,10 @@
             </div>
             <button class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-text="login ? 'Login' : 'Sign up'"></button>
             <div class="flex flex-row items-center gap-4 mt-8 justify-center">
-              <div @click="location.href = '/oauth2/google'" class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
+              <div @click="location.href='/oauth2/google'" class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
                 <img src="img/google.svg" alt="Google">
               </div>
-              <div @click="location.href = '/oauth2/github'" class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
+              <div @click="location.href='/oauth2/github'" class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
                 <img src="img/github.svg" alt="Github">
               </div>
             </div>

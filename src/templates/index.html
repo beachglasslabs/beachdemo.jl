@@ -18,7 +18,7 @@
     <div>
       <nav class="w-full fixed z-40" x-data="{ background: false, mobile: false, account: false }">
         <div class="px-4 md:px-16 py-6 flex flex-row items-center transition duration-500" :class="background ? 'bg-zinc-900 bg-opacity-90' : ''">
-          <img class="h-4 lg:h-7" src="img/logo.png" alt="Logo" />
+          <img class="h-4 lg:h-7" src="img/logo.png" alt="Logo">
           <div class="flex-row ml-8 gap-7 hidden lg:flex" x-data="{items: [
                 {label: 'Home', active: true},
                 {label: 'Series'},
@@ -36,7 +36,7 @@
             <p class="text-white text-sm">Browse</p>
             <img src="img/bschevrondown.svg" alt="Google" class="w-4 text-white fill-white transition" :class="mobile ? 'rotate-180' : 'rotate-0'">
             <div x-show="mobile" class="bg-black w-56 absolute top-8 left-0 py-5 flex-col border-2 border-gray-800 flex">
-              <div class="flex flex-col gap-4" />
+              <div class="flex flex-col gap-4">
                 <template x-for="item in items" :key="item.id">
                   <div class="px-3 text-center" :class="item.active ? 'text-white cursor-default' : 'text-gray-200 hover:underline cursor-pointer transition'" x-text="item.label">
                   </div>
@@ -59,9 +59,9 @@
               <div x-show="account" class="bg-black w-56 absolute top-14 right-0 py-5 flex-col border-2 border-gray-800 flex">
                 <div class="flex flex-col gap-3">
                   <div class="px-3 group/item flex flex-row gap-3 item-center w-full">
-                    <img draggable="false" class="w-8 rounded-md" src={{img}} alt="Profile">
+                    <img draggable="false" class="w-8 rounded-md" src="```avatar```" alt="Profile">
                     <p class="text-white text-sm group-hover/item:userline">
-                      {{name}}
+                      ```name```
                     </p>
                   </div>
                   <hr class="bg-gray-600 border-0 h-px my-4" />
