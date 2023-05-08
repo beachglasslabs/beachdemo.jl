@@ -15,9 +15,9 @@
     <script src="https://unpkg.com/alpinejs" defer></script>
     <link rel="stylesheet" href="style.css">
     <script>
-      function authForm() {
+      function dataForm() {
         return {
-          authData: {
+          formData: {
             name: '',
             email: '',
             password: '',
@@ -27,30 +27,10 @@
           getUrl() {
             return url = 'http://localhost:3000/' + (this.login ? 'login' : 'register')
           },
-          inputs: [ { id: 'name', type: 'text', label: 'Name' , value: '' },
-                    { id: 'email', type: 'email', label: 'Email address or phone number', value: '' },
-                    { id: 'password', type: 'password', label: 'Password', value: ''}
+          inputs: [ { id: 'name', name: 'name', type: 'text', label: 'Name' , value: '' },
+                    { id: 'email', name: 'email', type: 'email', label: 'Email address or phone number', value: '' },
+                    { id: 'password', name: 'password', type: 'password', label: 'Password', value: ''}
           ],
-          submitData() {
-            this.message = ''
-            this.authData.name = this.inputs[0].value
-            this.authData.email = this.inputs[1].value
-            this.authData.password = this.inputs[2].value
-
-            fetch(this.getUrl(), {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(this.authData),
-            })
-            .then((resp) => {
-              this.message = 'Form successfully submitted!'
-              location.href='/'
-            })
-            .catch(() => {
-              this.message = 'Oops! Something went wrong!'
-            })
-            return true
-          }
         }
       }
     </script>
@@ -62,12 +42,12 @@
           <img src="img/logo.png" alt="Logo" class="h-12" />
         </nav>
         <div class="flex justify-center">
-          <form :action="getUrl()" method="POST" class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full" x-data="authForm()" @submit.prevent="submitData">
+          <form :action="getUrl()" method="POST" class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full" x-data="dataForm()">
             <h2 class="text-white text-4xl mb-8 font-semibold" x-text="login ? 'Sign in' : 'Register'">Sign in</h2>
             <div class="flex flex-col gap-4">
               <template x-for="item in inputs" :key="item.id">
                 <div class="relative" x-show="item.id !== 'name' || !login">
-                  <input x-model="item.value" :type="item.type" :id="item.id"
+                  <input x-model="item.value" :name="item.name" :type="item.type" :id="item.id"
                       class="block rounded-md px-6 pt-6 pb-1 w-full text-md text-white bg-neutral-700 appearance-none focus:outline-none focus:ring-0 peer"
                       placeholder=" "
                   >
@@ -75,7 +55,7 @@
                 </div>
               </template>
             </div>
-            <button class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-text="login ? 'Login' : 'Sign up'"></button>
+            <button type="submit" class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-text="login ? 'Login' : 'Sign up'"></button>
             <div class="flex flex-row items-center gap-4 mt-8 justify-center">
               <div @click="location.href='/oauth2/google'" class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
                 <img src="img/google.svg" alt="Google">

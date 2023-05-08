@@ -8,7 +8,7 @@ using Oxygen
 using OteraEngine
 using Dates
 using Umbrella
-import URIs
+using URIs: URI, queryparams
 using JSONWebTokens
 using StructTypes
 
@@ -82,7 +82,7 @@ end
 function AuthMiddleware(handler)
     return function(req::HTTP.Request)
         # ** NOT an actual security check ** #
-        path = URIs.URI(req.target).path
+        path = URI(req.target).path
         if isnothing(getCookieToken(req)) && any(map(x -> x == path, PROTECTED_URLS))
             return HTTP.Response(302, [ "Location" => SERVER_URL * AUTH_URL ])
         else 
@@ -95,7 +95,6 @@ end
     current  = getCurrentUser(req)
     println("current = $(current)")
     if isnothing(current)
-        println("redirecting to $(AUTH_URL)")
         return HTTP.Response(302, ["Location" => AUTH_URL])
     end
     tmp = Template("./src/templates/index.html")
@@ -179,40 +178,63 @@ end
     return HTTP.Response(302, ["Set-Cookie" => "token=deleted; max-age=$(datetime2unix(now() - Days(3)))", "Location" => AUTH_URL ])
 end
 
+function parseForm(req::HTTP.Request)
+    return queryparams(String(HTTP.payload(req)))
+#    form = Dict{String, String}()
+#    payload = strip(String(HTTP.payload(req)))
+#    for pair in split(payload, "&")
+#        kv = split(pair, "=")
+#        if length(kv) == 2
+#            valpair = map(HTTP.unescapeuri, kv)
+#            form[valpair[1]] = valpair[2]
+#        end
+#    end
+#    return form
+end
+
 @post "/login" function(req::HTTP.Request)
-    user = json(req, User)
-    if isnothing(user) || isempty(user.email) || isempty(user.password)
+    println("logging in now")
+    form = parseForm(req)
+    println("form=$(form)")
+    #user = json(req, User)
+    #if isnothing(user) || isempty(user.email) || isempty(user.password)
+    if length(form) < 2 || !haskey(form, "email") || !haskey(form, "password")
         return HTTP.Response(302, ["Location" => AUTH_URL])
     end
-    if haskey(users, user.email)
-        found = users[user.email]
-        if found.user.password == user.password
-            println("jwt = $(found.jwt)")
+    if haskey(users, form["email"])
+        user = users[form["email"]]
+        if user.user.password == form["password"]
+            println("jwt = $(user.jwt)")
             #return Dict("token" => user.jwt)
-            return HTTP.Response(302, ["Set-Cookie" => "token=$(found.jwt); max-age=$(datetime2unix(now() + Day(3)))", "Location" => "/"])
+            return HTTP.Response(302, ["Set-Cookie" => "token=$(user.jwt); max-age=$(datetime2unix(now() + Day(3)))", "Location" => "/"])
         end
     end
     return HTTP.Response(302, ["Location" => AUTH_URL])
 end
 
 @post "/register" function(req::HTTP.Request)
-    user = json(req, User)
-    if isnothing(user) || isempty(user.email) || isempty(user.password)
+    println("registering now")
+    form = parseForm(req)
+    println("form=$(form)")
+    #user = json(req, User)
+    #if isnothing(user) || isempty(user.email) || isempty(user.password)
+    if length(form) < 2 || !haskey(form, "email") || !haskey(form, "password")
         return HTTP.Response(302, ["Location" => AUTH_URL])
     end
-    println("registering $(user)")
-    if haskey(users, user.email)
-        println("re-registering existing $(user)")
-        found = users[user.email]
-        println("jwt = $(found.jwt)")
+    println("registering $(form["email"])")
+    if haskey(users, form["email"])
+        println("re-registering existing $(form["email"])")
+        user = users[form["email"]]
+        println("jwt = $(user.jwt)")
         #return Dict("token" => user.jwt)
-        return HTTP.Response(302, ["Set-Cookie" => "token=$(found.jwt); max-age=$(datetime2unix(now() + Day(3)))", "Location" => "/"])
+        return HTTP.Response(302, ["Set-Cookie" => "token=$(user.jwt); max-age=$(datetime2unix(now() + Day(3)))", "Location" => "/"])
     end
-    claims = Dict("sub" => user.email, "email" => user.email, "iat" => datetime2unix(now()))
+    claims = Dict("sub" => form["email"], "email" => form["email"], "iat" => datetime2unix(now()))
     encoding = JSONWebTokens.HS256(ENV["AUTH_JWT_SECRET"])
     jwt = JSONWebTokens.encode(encoding, claims)
-    current = User(user.name, user.email, user.password)
-    users[user.email] = AuthUser(current, getAvatar(), jwt)
+    name = get(form, "name", form["email"])
+    current = User(name, form["email"], form["password"])
+    users[form["email"]] = AuthUser(current, getAvatar(), jwt)
     println("jwt = $(jwt)")
     return HTTP.Response(302, ["Set-Cookie" => "token=$(jwt); max-age=$(datetime2unix(now() + Day(3)))", "Location" => "/"])
 end
