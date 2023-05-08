@@ -10,7 +10,6 @@ using Dates
 using Umbrella
 using URIs: URI, queryparams
 using JSONWebTokens
-using StructTypes
 
 using .Init
 using .Auth
@@ -52,7 +51,6 @@ end
 function getCookieToken(req::HTTP.Request)
     for cookie in Cookies.cookies(req)
         if cookie.name == "token"
-            println("found token=$(cookie.value)")
             return cookie.value
         end
     end
@@ -72,6 +70,14 @@ function getCurrentUser(req::HTTP.Request)
     return nothing
 end
 
+function redirect(location::String)
+    return HTTP.Response(302, ["Location" => location])
+end
+
+function redirect(location::String, token::String, days::Integer = 3)
+    return HTTP.Response(302, ["Set-Cookie" => "token=$(token); max-age=$(datetime2unix(now() + Day(days)))", "Location" => location])
+end
+
 function getAvatar()
     return rand(String["/img/default-blue.png",
                        "/img/default-red.png",
@@ -83,9 +89,16 @@ function AuthMiddleware(handler)
     return function(req::HTTP.Request)
         # ** NOT an actual security check ** #
         path = URI(req.target).path
-        if isnothing(getCookieToken(req)) && any(map(x -> x == path, PROTECTED_URLS))
-            return HTTP.Response(302, [ "Location" => SERVER_URL * AUTH_URL ])
-        else 
+        current = getCurrentUser(req)
+        protected = any(map(x -> x == path, PROTECTED_URLS))
+        if protected
+            if isnothing(current)
+                return redirect(AUTH_URL)
+            else
+                println("found session for $(current.user.email)")
+                return handler(req) # passes the request to your application
+            end
+        else
             return handler(req) # passes the request to your application
         end
     end
@@ -95,7 +108,7 @@ end
     current  = getCurrentUser(req)
     println("current = $(current)")
     if isnothing(current)
-        return HTTP.Response(302, ["Location" => AUTH_URL])
+        return redirect(AUTH_URL)
     end
     tmp = Template("./src/templates/index.html")
     init = Dict("name" => current.user.name, "avatar" => current.avatar)
@@ -126,15 +139,15 @@ end
         function (tokens::Google.Tokens, user::Google.User)
             println(tokens.access_token)
             println(tokens.refresh_token)
-            println("email=$(user.email)")
+            println("google email=$(user.email)")
             if haskey(users, user.email)
                 users[user.email].avatar = user.picture
                 users[user.email].jwt = tokens.access_token
             else
-                println("avatar=$(user.picture)")
+                println("google avatar=$(user.picture)")
                 users[user.email] = AuthUser(User(user.given_name, user.email, ""), user.picture, tokens.access_token)
             end
-            return HTTP.Response(302, ["Set-Cookie" => "token=$(tokens.access_token); max-age=$(datetime2unix(now() + Day(3)))", "Location" => "/"])
+            return redirect("/", tokens.access_token)
         end
     )
 end
@@ -147,15 +160,15 @@ end
     github_oauth2.token_exchange(code,
         function (tokens::GitHub.Tokens, user::GitHub.User)
             println(tokens.access_token)
-            println("email=$(user.email)")
+            println("github email=$(user.email)")
             if haskey(users, user.email)
                 users[user.email].avatar = user.avatar
                 users[user.email].jwt = tokens.access_token
             else
-                println("avatar=$(user.avatar)")
+                println("github avatar=$(user.avatar)")
                 users[user.email] = AuthUser(User(user.name, user.email, ""), user.avatar, tokens.access_token)
             end
-            return HTTP.Response(302, ["Set-Cookie" => "token=$(tokens.access_token); max-age=$(datetime2unix(now() + Day(3)))", "Location" => "/"])
+            return redirect("/", tokens.access_token)
         end
     )
 end
@@ -163,7 +176,7 @@ end
 @get "/profiles" function(req::HTTP.Request)
     current = getCurrentUser(req)
     if isnothing(current)
-        return HTTP.Response(302, ["Location" => AUTH_URL])
+        return redirect(AUTH_URL)
     end
     tmp = Template("./src/templates/profiles.html")
     init = Dict("name" => current.user.name, "avatar" => current.avatar)
@@ -173,70 +186,60 @@ end
 @post "/logout" function(req::HTTP.Request)
     current = getCurrentUser(req)
     if isnothing(current)
-        return HTTP.Response(302, ["Location" => AUTH_URL])
+        return redirect(AUTH_URL)
     end
-    return HTTP.Response(302, ["Set-Cookie" => "token=deleted; max-age=$(datetime2unix(now() - Days(3)))", "Location" => AUTH_URL ])
+    return redirect(AUTH_URL, "deleted", -3)
 end
 
 function parseForm(req::HTTP.Request)
     return queryparams(String(HTTP.payload(req)))
-#    form = Dict{String, String}()
-#    payload = strip(String(HTTP.payload(req)))
-#    for pair in split(payload, "&")
-#        kv = split(pair, "=")
-#        if length(kv) == 2
-#            valpair = map(HTTP.unescapeuri, kv)
-#            form[valpair[1]] = valpair[2]
-#        end
-#    end
-#    return form
 end
 
 @post "/login" function(req::HTTP.Request)
-    println("logging in now")
     form = parseForm(req)
     println("form=$(form)")
     #user = json(req, User)
     #if isnothing(user) || isempty(user.email) || isempty(user.password)
     if length(form) < 2 || !haskey(form, "email") || !haskey(form, "password")
-        return HTTP.Response(302, ["Location" => AUTH_URL])
+        return redirect(AUTH_URL)
     end
     if haskey(users, form["email"])
         user = users[form["email"]]
         if user.user.password == form["password"]
-            println("jwt = $(user.jwt)")
-            #return Dict("token" => user.jwt)
-            return HTTP.Response(302, ["Set-Cookie" => "token=$(user.jwt); max-age=$(datetime2unix(now() + Day(3)))", "Location" => "/"])
+            println("logging in $(form["email"])")
+            return redirect("/", user.jwt)
         end
     end
-    return HTTP.Response(302, ["Location" => AUTH_URL])
+    return redirect(AUTH_URL)
 end
 
 @post "/register" function(req::HTTP.Request)
-    println("registering now")
     form = parseForm(req)
     println("form=$(form)")
     #user = json(req, User)
     #if isnothing(user) || isempty(user.email) || isempty(user.password)
     if length(form) < 2 || !haskey(form, "email") || !haskey(form, "password")
-        return HTTP.Response(302, ["Location" => AUTH_URL])
+        return redirect(AUTH_URL)
+    end
+    if haskey(users, form["email"])
+        println("existing user $(form["email"]) found")
+        current = getCurrentUser(req) 
+        if !isnothing(current) && current.user.email != form["email"]
+            println("already logged in $(form["email"])")
+            return redirect("/")
+        else
+            return redirect(AUTH_URL)
+        end
     end
     println("registering $(form["email"])")
-    if haskey(users, form["email"])
-        println("re-registering existing $(form["email"])")
-        user = users[form["email"]]
-        println("jwt = $(user.jwt)")
-        #return Dict("token" => user.jwt)
-        return HTTP.Response(302, ["Set-Cookie" => "token=$(user.jwt); max-age=$(datetime2unix(now() + Day(3)))", "Location" => "/"])
-    end
     claims = Dict("sub" => form["email"], "email" => form["email"], "iat" => datetime2unix(now()))
     encoding = JSONWebTokens.HS256(ENV["AUTH_JWT_SECRET"])
     jwt = JSONWebTokens.encode(encoding, claims)
-    name = get(form, "name", form["email"])
-    current = User(name, form["email"], form["password"])
-    users[form["email"]] = AuthUser(current, getAvatar(), jwt)
     println("jwt = $(jwt)")
-    return HTTP.Response(302, ["Set-Cookie" => "token=$(jwt); max-age=$(datetime2unix(now() + Day(3)))", "Location" => "/"])
+    name = get(form, "name", form["email"])
+    user = User(name, form["email"], form["password"])
+    users[form["email"]] = AuthUser(user, getAvatar(), jwt)
+    return redirect("/", jwt)
 end
 
 staticfiles("public", "/")
