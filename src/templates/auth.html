@@ -14,26 +14,6 @@
     <script src="https://unpkg.com/htmx.org@1.9.2" integrity="sha384-L6OqL9pRWyyFU3+/bjdSri+iIphTN/bvYyM37tICVyOJkWZLpP2vGn6VUEXgzg6h" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
     <link rel="stylesheet" href="style.css">
-    <script>
-      function dataForm() {
-        return {
-          formData: {
-            name: '',
-            email: '',
-            password: '',
-          },
-          message: '',
-          login: true,
-          getUrl() {
-            return url = 'http://localhost:3000/' + (this.login ? 'login' : 'register')
-          },
-          inputs: [ { id: 'name', name: 'name', type: 'text', label: 'Name' , value: '' },
-                    { id: 'email', name: 'email', type: 'email', label: 'Email address or phone number', value: '' },
-                    { id: 'password', name: 'password', type: 'password', label: 'Password', value: ''}
-          ],
-        }
-      }
-    </script>
   </head>
   <body>
     <div class="relative h-full w-full bg-[url('img/hero.jpg')] bg-no-repeat bg-center bg-fixed bg-cover">
@@ -42,7 +22,19 @@
           <img src="img/logo.png" alt="Logo" class="h-12" />
         </nav>
         <div class="flex justify-center">
-          <form :action="getUrl()" method="POST" class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full" x-data="dataForm()">
+          <form :action="getUrl()" method="POST" class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full" x-data="{
+                    formData: { name: '', email: '', password: '', },
+                    message: '',
+                    login: true,
+                    getUrl() {
+                      return url = 'http://localhost:3000/' + (this.login ? 'login' : 'register')
+                    },
+                    inputs: [ { id: 'name', name: 'name', type: 'text', label: 'Name' , value: '' },
+                              { id: 'email', name: 'email', type: 'email', label: 'Email address or phone number', value: '' },
+                              { id: 'password', name: 'password', type: 'password', label: 'Password', value: ''}
+                    ]
+            }"
+          >
             <h2 class="text-white text-4xl mb-8 font-semibold" x-text="login ? 'Sign in' : 'Register'">Sign in</h2>
             <div class="flex flex-col gap-4">
               <template x-for="item in inputs" :key="item.id">

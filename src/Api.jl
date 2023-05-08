@@ -58,8 +58,10 @@ function getCookieToken(req::HTTP.Request)
 end
 
 function getCurrentUser(req::HTTP.Request)
+    println("users=$(users)")
     token = getCookieToken(req)
     if !isnothing(token)
+        println("current token=$(token)")
         for user in values(users)
             if token == user.jwt
                 return user
@@ -74,7 +76,8 @@ function redirect(location::String)
 end
 
 function redirect(location::String, token::String, days::Integer = 3)
-    return HTTP.Response(302, ["Set-Cookie" => "token=$(token); max-age=$(datetime2unix(now() + Day(days)))", "Location" => location])
+    println("redirect token=$(token)")
+    return HTTP.Response(302, ["Set-Cookie" => "token=$(token); Max-Age=$(datetime2unix(now() + Day(days))); Path=/; SameSize=None;", "Location" => location])
 end
 
 function getAvatar()
@@ -89,6 +92,7 @@ function AuthMiddleware(handler)
         # ** NOT an actual security check ** #
         path = URI(req.target).path
         current = getCurrentUser(req)
+        println("auth current=$(current)")
         protected = any(map(x -> x == path, PROTECTED_URLS))
         if protected
             if isnothing(current)
@@ -133,20 +137,15 @@ end
     println("got google callback")
     query_params = queryparams(req)
     code = query_params["code"]
-
+    println("google code=$(code)")
     google_oauth2.token_exchange(code,
         function (tokens::Google.Tokens, user::Google.User)
             println(tokens.access_token)
             println(tokens.refresh_token)
             println("google email=$(user.email)")
-            if haskey(users, user.email)
-                users[user.email].avatar = user.picture
-                users[user.email].jwt = tokens.access_token
-            else
-                println("google avatar=$(user.picture)")
-                users[user.email] = AuthUser(User(user.given_name, user.email, ""), user.picture, tokens.access_token)
+            if !haskey(users, user.email)
+                users[user.email] = AuthUser(User(user.given_name, user.email, "google"), user.picture, tokens.access_token)
             end
-            return redirect("/", tokens.access_token)
         end
     )
 end
@@ -155,19 +154,16 @@ end
     println("got github callback")
     query_params = queryparams(req)
     code = query_params["code"]
-
+    println("github code=$(code)")
     github_oauth2.token_exchange(code,
         function (tokens::GitHub.Tokens, user::GitHub.User)
             println(tokens.access_token)
+            println("user = $(user)")
             println("github email=$(user.email)")
-            if haskey(users, user.email)
-                users[user.email].avatar = user.avatar
-                users[user.email].jwt = tokens.access_token
-            else
-                println("github avatar=$(user.avatar)")
-                users[user.email] = AuthUser(User(user.name, user.email, ""), user.avatar, tokens.access_token)
+            if !haskey(users, user.email)
+                #println("github avatar=$(user.avatar_url)")
+                users[user.email] = AuthUser(User(user.name, user.email, "github"), user.avatar_url, tokens.access_token)
             end
-            return redirect("/", tokens.access_token)
         end
     )
 end
