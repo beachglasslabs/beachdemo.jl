@@ -16,7 +16,11 @@
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <div>
+    <div x-data="{ movies: [], favorites: [],
+                   lists: [ { id: 'trending', title: 'Trending Now', data: this.movies },
+                            { id: 'favorite', title: 'My List', data: this.favorites } ],
+                 }"
+    >
       <nav class="w-full fixed z-40" x-data="{ background: false, mobile: false, account: false, active: 1, menu: [
                 { id: 1, label: 'Home' },
                 { id: 2, label: 'Series' },
@@ -37,7 +41,7 @@
           </div>
           <div @click="mobile = !mobile" class="lg:hidden flex flex-row items-center gap-2 ml-8 cursor-pointer relative">
             <p class="text-white text-sm">Browse</p>
-            <img src="img/bschevrondown.svg" alt="Google" class="w-4 text-white fill-white transition" :class="mobile ? 'rotate-180' : 'rotate-0'">
+            <img src="img/bschevrondown.svg" class="w-4 text-white fill-white transition" :class="mobile ? 'rotate-180' : 'rotate-0'">
             <div x-show="mobile" class="bg-black w-56 absolute top-8 left-0 py-5 flex-col border-2 border-gray-800 flex">
               <div class="flex flex-col gap-4">
                 <template x-for="item in menu" :key="item.id">
@@ -49,10 +53,10 @@
           </div>
           <div class="flex flex-row ml-auto gap-7 items-center">
             <div class="text-gray-200 hover:text-gray-300 cursor-pointer transition">
-              <img src="img/bssearch.svg" alt="Search Icon" class="w-6">
+              <img src="img/bssearch.svg" alt="Search" class="w-6">
             </div>
             <div class="text-gray-200 hover:text-gray-300 cursor-pointer transition">
-              <img src="img/bsbell.svg" alt="Bell Icon" class="w-6">
+              <img src="img/bsbell.svg" alt="Notification" class="w-6">
             </div>
             <div @click="account = !account" class="flex flex-row items-center gap2 cursor-pointer relative">
               <div class="w-6 h-6 lg:w-10 lg:h-10 rounded-md overflow-hidden">
@@ -69,7 +73,7 @@
                   </div>
                   <hr class="bg-gray-600 border-0 h-px my-4" />
                   <div hx-post="/logout" hx-target="body" hx-swap="outerHTML" class="px-3 text-center text-white text-sm hover:underline">
-                    Sign out of Netflix
+                    Sign out of Beachglass
                   </div>
                 </div>
               </div>
@@ -77,6 +81,52 @@
           </div>
         </div>
       </nav>
+      <template x-for="item in lists" :key="item.id">
+        <div class="pb-40">
+          <div class="px-4 md:px-12 mt-4 space-y-8">
+              <div>
+                  <p class="text-white text-md md:text-xl lg:text-2xl font-semibold mb-4" x-text="item.title">
+                  </p>
+                  <div class="grid grid-cols-4 gap-2">
+                    <template x-for "movie in item.data" :key="movie.id">
+                      <div class="group bg-zinc-900 col-span relative h-[12vw]">
+                        <img @click={redirectToWatch} src="movie.thumbnailUrl" alt="Thumbnail" draggable={false}
+                             class="cursor-pointer object-cover transition duration shadow-xl rounded-md group-hover:opacity-90 sm:group-hover:opacity-0 delay-300 w-full h-[12vw]">
+                        <div class="opacity-0 absolute top-0 transition duration-200 z-10 invisible sm:visible delay-300 w-full scale-0 group-hover:scale-110 group-hover:-translate-y-[6vw] group-hover:translate-x-[2vw] group-hover:opacity-100">
+                          <img @click="redirectToWatch" src="movie.thumbnailUrl" alt="Thumbnail" draggable={false}
+                               class="cursor-pointer object-cover transition duration shadow-xl rounded-t-md w-full h-[12vw]">
+                          <div class="z-10 bg-zinc-800 p-2 lg:p-4 absolute w-full transition shadow-md rounded-b-md">
+                            <div class="flex flex-row items-center gap-3">
+                              <div @click="redirectToWatch" class="cursor-pointer w-6 h-6 lg:w-10 lg:h-10 bg-white rounded-full flex justify-center items-center transition hover:bg-neutral-300">
+                                <img src="img/bsfillplayfill.svg" class="text-black w-4 lg:w-6">
+                              </div>
+                              <div @click="toggleFavorite"
+                                   class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300"
+                              >
+                                  <img :src="isFavorite() ? 'img/aioutlinecheck.svg' : 'img/aioutlineplus.svg'" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
+                              </div>
+                              <div @click="openModal(movie.id)" class="cursor-pointer ml-auto group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300">
+                                <img src="img/bichevrondown.svg" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
+                              </div>
+                            </div>
+                            <p class="text-green-400 font-semibold mt-4">
+                              New <span class="text-white">2023</span>
+                            </p>
+                            <div class="flex flex-row mt-4 gap-2 items-center">
+                              <p class="text-white text-[10px] lg:text-sm">{data.duration}</p>
+                            </div>
+                            <div class="flex flex-row mt-4 gap-2 items-center">
+                              <p class="text-white text-[8px] lg:text-sm">{data.genre}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+              </div>
+          </div>
+        </div>
+      </template>
     </div>
   </body>
 </html>
