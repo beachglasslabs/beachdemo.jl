@@ -17,7 +17,7 @@ using .Auth
 const PROTECTED_URLS = [ "/", "/profiles" ]
 
 const CORS_HEADERS = [
-    "Access-Control-Allow-Origin" => SERVER_URL,
+    "Access-Control-Allow-Origin" => "*",
     "Access-Control-Allow-Headers" => "*",
     "Access-Control-Allow-Methods" => "POST, GET, OPTIONS"
 ]
@@ -28,13 +28,16 @@ mutable struct User
     password::String
 end
 
-mutable struct AuthUser
+mutable struct Account
     user::User
     avatar::String
     jwt::String
 end
 
-const users = Dict{String, AuthUser}()
+# email -> account(user)
+const accounts = Dict{String, Account}()
+# sessionId -> email
+const sessions = Dict{String, String}()
 
 # https://juliaweb.github.io/HTTP.jl/stable/examples/#Cors-Server
 function CorsMiddleware(handler)
@@ -57,15 +60,31 @@ function getCookieToken(req::HTTP.Request)
     return nothing
 end
 
-function getCurrentUser(req::HTTP.Request)
-    println("users=$(users)")
+function getSessionUser(req::HTTP.Request)
     token = getCookieToken(req)
     if !isnothing(token)
-        println("current token=$(token)")
-        for user in values(users)
-            if token == user.jwt
-                return user
-            end
+        if haskey(sessions, token)
+            return sessions[token]
+        end
+    end
+    return nothing
+end
+
+function removeSessionUser!(email::String)
+    for (k, v) in sessions
+        if v == email
+            delete!(sessions, k)
+            return k
+        end
+    end
+    return nothing
+end
+
+function getCurrentUser(req::HTTP.Request)
+    user = getSessionUser(req)
+    if !isnothing(user)
+        if haskey(accounts, user)
+            return accounts[user]
         end
     end
     return nothing
@@ -77,7 +96,8 @@ end
 
 function redirect(location::String, token::String, days::Integer = 3)
     println("redirect token=$(token)")
-    return HTTP.Response(302, ["Set-Cookie" => "token=$(token); Max-Age=$(datetime2unix(now() + Day(days))); Path=/; SameSize=None;", "Location" => location])
+    return HTTP.Response(302, ["Set-Cookie" => "token=$(token); Max-Age=$(datetime2unix(now() + Day(days))); Path=/; SameSize=None;",
+                               "Location" => location])
 end
 
 function getAvatar()
@@ -87,9 +107,26 @@ function getAvatar()
                        "/img/default-green.png"])
 end
 
+function parseForm(req::HTTP.Request)
+    return queryparams(String(HTTP.payload(req)))
+end
+
+function validateForm(form::Dict{String, String}, fields::Vector{String})
+    if length(form) < length(fields)
+        return false
+    end
+    for f in fields
+        if !haskey(form, f)
+            return false
+        elseif isnothing(form[f]) || isempty(form[f])
+            return false
+        end
+    end
+    return true
+end
+
 function AuthMiddleware(handler)
     return function(req::HTTP.Request)
-        # ** NOT an actual security check ** #
         path = URI(req.target).path
         current = getCurrentUser(req)
         println("auth current=$(current)")
@@ -118,14 +155,15 @@ end
     return html(tmp(init))
 end
 
-@get "/auth" function(req::HTTP.Request)
+@get "/auth" function(_::HTTP.Request)
     tmp = Template("./src/templates/auth.html")
     return html(tmp())
 end
 
 @get "/oauth2/google" function(req::HTTP.Request)
     println("redirect google auth")
-    google_oauth2.redirect()
+    oauth2 = init(:google, newGoogleState())
+    oauth2.redirect()
 end
 
 @get "/oauth2/github" function(req::HTTP.Request)
@@ -137,17 +175,22 @@ end
     println("got google callback")
     query_params = queryparams(req)
     code = query_params["code"]
-    println("google code=$(code)")
+    session = query_params["state"]
+    println("google session=$(session)")
     google_oauth2.token_exchange(code,
         function (tokens::Google.Tokens, user::Google.User)
             println(tokens.access_token)
             println(tokens.refresh_token)
             println("google email=$(user.email)")
-            if !haskey(users, user.email)
-                users[user.email] = AuthUser(User(user.given_name, user.email, "google"), user.picture, tokens.access_token)
+            if !haskey(accounts, user.email)
+                accounts[user.email] = Account(User(user.given_name, user.email, "google"), user.picture, tokens.access_token)
             end
+            sessions[session] = user.email
+            println("in google callback")
         end
     )
+    println("after google callback")
+    return redirect("/", session)
 end
 
 @get "/api/auth/callback/github" function(req::HTTP.Request)
@@ -160,12 +203,14 @@ end
             println(tokens.access_token)
             println("user = $(user)")
             println("github email=$(user.email)")
-            if !haskey(users, user.email)
-                #println("github avatar=$(user.avatar_url)")
-                users[user.email] = AuthUser(User(user.name, user.email, "github"), user.avatar_url, tokens.access_token)
+            if !haskey(accounts, user.email)
+                accounts[user.email] = Account(User(user.name, user.email, "github"), user.avatar_url, tokens.access_token)
             end
+            println("in github callback")
         end
     )
+    println("after github callback")
+    return redirect("/")
 end
 
 @get "/profiles" function(req::HTTP.Request)
@@ -182,27 +227,26 @@ end
     current = getCurrentUser(req)
     if isnothing(current)
         return redirect(AUTH_URL)
+    else
+        token = removeSessionUser!(current.user.email)
+        println("removing session $(token)")
+        return redirect(AUTH_URL, token, -3)
     end
-    return redirect(AUTH_URL, "deleted", -3)
-end
-
-function parseForm(req::HTTP.Request)
-    return queryparams(String(HTTP.payload(req)))
 end
 
 @post "/login" function(req::HTTP.Request)
     form = parseForm(req)
     println("form=$(form)")
-    #user = json(req, User)
-    #if isnothing(user) || isempty(user.email) || isempty(user.password)
-    if length(form) < 2 || !haskey(form, "email") || !haskey(form, "password")
+    if !validateForm(form, ["email", "password"])
         return redirect(AUTH_URL)
     end
-    if haskey(users, form["email"])
-        user = users[form["email"]]
+    if haskey(accounts, form["email"])
+        user = accounts[form["email"]]
         if user.user.password == form["password"]
             println("logging in $(form["email"])")
-            return redirect("/", user.jwt)
+            token = newSessionId()
+            sessions[token] = user.user.email
+            return redirect("/", token)
         end
     end
     return redirect(AUTH_URL)
@@ -211,15 +255,15 @@ end
 @post "/register" function(req::HTTP.Request)
     form = parseForm(req)
     println("form=$(form)")
-    #user = json(req, User)
-    #if isnothing(user) || isempty(user.email) || isempty(user.password)
-    if length(form) < 2 || !haskey(form, "email") || !haskey(form, "password")
+    if !validateForm(form, ["email", "password"])
         return redirect(AUTH_URL)
+    elseif isnothing(form["name"]) || isempty(form["name"])
+        form["name"] = form["email"]
     end
-    if haskey(users, form["email"])
+    if haskey(accounts, form["email"])
         println("existing user $(form["email"]) found")
         current = getCurrentUser(req) 
-        if !isnothing(current) && current.user.email != form["email"]
+        if !isnothing(current) && current.user.email == form["email"]
             println("already logged in $(form["email"])")
             return redirect("/")
         else
@@ -231,10 +275,11 @@ end
     encoding = JSONWebTokens.HS256(ENV["AUTH_JWT_SECRET"])
     jwt = JSONWebTokens.encode(encoding, claims)
     println("jwt = $(jwt)")
-    name = get(form, "name", form["email"])
-    user = User(name, form["email"], form["password"])
-    users[form["email"]] = AuthUser(user, getAvatar(), jwt)
-    return redirect("/", jwt)
+    user = User(form["name"], form["email"], form["password"])
+    accounts[form["email"]] = Account(user, getAvatar(), jwt)
+    token = newSessionId()
+    sessions[token] = form["email"]
+    return redirect("/", token)
 end
 
 staticfiles("public", "/")

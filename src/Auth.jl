@@ -7,7 +7,7 @@ include("Init.jl")
 
 using .Init
 
-export google_oauth2, github_oauth2, newSessionId
+export google_oauth2, github_oauth2, newSessionId, newGoogleState
 export Init
 
 readenv()
@@ -36,7 +36,19 @@ const github_options = Configuration.Options(;
 )
 const github_oauth2 = init(:github, github_options)
 
+function newGoogleState()
+    Configuration.Options(;
+        client_id = ENV["GOOGLE_ID"],
+        client_secret = ENV["GOOGLE_SECRET"],
+        redirect_uri = SERVER_URL * "/api/auth/callback/google",
+        success_redirect = "/",
+        failure_redirect = AUTH_URL,
+        scopes = ["profile", "openid", "email"],
+        state = newSessionId(),
+    )
+end
+
 end # module Auth
 
 using .Auth
-export google_oauth2, github_oauth2, newSessionId
+export google_oauth2, github_oauth2, newSessionId, newGoogleState
