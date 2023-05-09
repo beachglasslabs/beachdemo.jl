@@ -283,7 +283,7 @@ end
         current = getCurrentUser(req) 
         if !isnothing(current) && current.user.email == form["email"]
             println("already logged in $(form["email"])")
-            return redirect("/")
+            return redirect("/profiles")
         else
             return redirect(AUTH_URL)
         end
@@ -295,7 +295,7 @@ end
     accounts[form["email"]] = Account(user, getAvatar(), jwt)
     token = newSessionId()
     sessions[token] = form["email"]
-    return redirect("/", token)
+    return redirect("/profiles", token)
 end
 
 staticfiles("public", "/")
