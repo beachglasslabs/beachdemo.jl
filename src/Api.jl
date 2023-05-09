@@ -6,10 +6,8 @@ using HTTP: Middleware, Cookies
 using HTTP
 using Oxygen
 using OteraEngine
-using Dates
 using Umbrella
 using URIs: URI, queryparams
-using JSONWebTokens
 
 using .Init
 using .Auth
@@ -25,7 +23,7 @@ const CORS_HEADERS = [
 mutable struct User
     name::String
     email::String
-    password::String
+    password::Union{String, Nothing}
 end
 
 mutable struct Account
@@ -38,6 +36,8 @@ end
 const accounts = Dict{String, Account}()
 # sessionId -> email
 const sessions = Dict{String, String}()
+# sessionId -> provider
+const oauth2 = Dict{String, OAuth2}()
 
 # https://juliaweb.github.io/HTTP.jl/stable/examples/#Cors-Server
 function CorsMiddleware(handler)
@@ -96,7 +96,7 @@ end
 
 function redirect(location::String, token::String, days::Integer = 3)
     println("redirect token=$(token)")
-    return HTTP.Response(302, ["Set-Cookie" => "token=$(token); Max-Age=$(datetime2unix(now() + Day(days))); Path=/; SameSize=None;",
+    return HTTP.Response(302, ["Set-Cookie" => newCookie(token, days),
                                "Location" => location])
 end
 
@@ -158,58 +158,76 @@ end
     return html(tmp())
 end
 
-@get "/oauth2/google" function(req::HTTP.Request)
+@get "/oauth2/google" function(_::HTTP.Request)
     println("redirect google auth")
-    oauth2 = init(:google, newGoogleState())
-    oauth2.redirect()
+    state = newSessionId()
+    google = init(:google, googleOptions(state))
+    oauth2[state] = google
+    google.redirect()
 end
 
-@get "/oauth2/github" function(req::HTTP.Request)
+@get "/oauth2/github" function(_::HTTP.Request)
     println("redirect github auth")
-    github_oauth2.redirect()
+    state = newSessionId()
+    github = init(:github, githubOptions(state))
+    oauth2[state] = github
+    github.redirect()
 end
 
 @get "/api/auth/callback/google" function(req::HTTP.Request)
-    println("got google callback")
     query_params = queryparams(req)
     code = query_params["code"]
-    session = query_params["state"]
-    println("google session=$(session)")
-    google_oauth2.token_exchange(code,
-        function (tokens::Google.Tokens, user::Google.User)
-            println(tokens.access_token)
-            # offline access only
-            #println(tokens.refresh_token)
-            println("google email=$(user.email)")
-            if !haskey(accounts, user.email)
-                accounts[user.email] = Account(User(user.given_name, user.email, "google"), user.picture, tokens.access_token)
+    state = query_params["state"]
+    println("google session=$(state)")
+    if haskey(oauth2, state)
+        google = oauth2[state]
+        # generate a new session id for cookie
+        token = newSessionId()
+        google.token_exchange(code,
+            function (tokens::Google.Tokens, user::Google.User)
+                println(tokens.access_token)
+                # offline access only
+                #println(tokens.refresh_token)
+                println("google email=$(user.email)")
+                if !haskey(accounts, user.email)
+                    jwt = newJwt(user.email)
+                    accounts[user.email] = Account(User(user.given_name, user.email, nothing), user.picture, jwt)
+                end
+                sessions[token] = user.email
             end
-            sessions[session] = user.email
-            println("in google callback")
-        end
-    )
-    println("after google callback")
-    return redirect("/", session)
+        )
+        delete!(oauth2, state)
+        return redirect("/", token)
+    else
+        return redirect(AUTH_URL)
+    end
 end
 
 @get "/api/auth/callback/github" function(req::HTTP.Request)
-    println("got github callback")
     query_params = queryparams(req)
     code = query_params["code"]
-    println("github code=$(code)")
-    github_oauth2.token_exchange(code,
-        function (tokens::GitHub.Tokens, user::GitHub.User)
-            println(tokens.access_token)
-            println("user = $(user)")
-            println("github email=$(user.email)")
-            if !haskey(accounts, user.email)
-                accounts[user.email] = Account(User(user.name, user.email, "github"), user.avatar_url, tokens.access_token)
+    state = query_params["state"]
+    println("github session=$(state)")
+    if haskey(oauth2, state)
+        github = oauth2[state]
+        # generate a new session id for cookie
+        token = newSessionId()
+        github.token_exchange(code,
+            function (tokens::GitHub.Tokens, user::GitHub.User)
+                println(tokens.access_token)
+                println("github email=$(user.email)")
+                if !haskey(accounts, user.email)
+                    jwt = newJwt(user.email)
+                    accounts[user.email] = Account(User(user.name, user.email, nothing), user.avatar_url, jwt)
+                end
+                sessions[token] = user.email
             end
-            println("in github callback")
-        end
-    )
-    println("after github callback")
-    return redirect("/")
+        )
+        delete!(oauth2, state)
+        return redirect("/", token)
+    else
+        return redirect(AUTH_URL)
+    end
 end
 
 @get "/profiles" function(req::HTTP.Request)
@@ -241,7 +259,8 @@ end
     end
     if haskey(accounts, form["email"])
         user = accounts[form["email"]]
-        if user.user.password == form["password"]
+        # if pssword is nothing then it was registered through oauth2
+        if !isnothing(user.user.password) && user.user.password == form["password"]
             println("logging in $(form["email"])")
             token = newSessionId()
             sessions[token] = user.user.email
@@ -270,9 +289,7 @@ end
         end
     end
     println("registering $(form["email"])")
-    claims = Dict("sub" => form["email"], "email" => form["email"], "iat" => datetime2unix(now()))
-    encoding = JSONWebTokens.HS256(ENV["AUTH_JWT_SECRET"])
-    jwt = JSONWebTokens.encode(encoding, claims)
+    jwt = newJwt(form["email"])
     println("jwt = $(jwt)")
     user = User(form["name"], form["email"], form["password"])
     accounts[form["email"]] = Account(user, getAvatar(), jwt)
