@@ -197,7 +197,7 @@ end
             end
         )
         delete!(oauth2, state)
-        return redirect("/", token)
+        return redirect("/profiles", token)
     else
         return redirect(AUTH_URL)
     end
@@ -224,7 +224,7 @@ end
             end
         )
         delete!(oauth2, state)
-        return redirect("/", token)
+        return redirect("/profiles", token)
     else
         return redirect(AUTH_URL)
     end
@@ -264,7 +264,7 @@ end
             println("logging in $(form["email"])")
             token = newSessionId()
             sessions[token] = user.user.email
-            return redirect("/", token)
+            return redirect("/profiles", token)
         end
     end
     return redirect(AUTH_URL)
