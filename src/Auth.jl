@@ -1,15 +1,20 @@
 module Auth
 
 using Umbrella
+using UUIDs
 
 include("Init.jl")
 
 using .Init
 
-export google_oauth2, github_oauth2
+export google_oauth2, github_oauth2, newSessionId
 export Init
 
 readenv()
+
+function newSessionId()
+    string(uuid1().value, base=16)
+end
 
 const google_options = Configuration.Options(;
     client_id = ENV["GOOGLE_ID"],
@@ -34,4 +39,4 @@ const github_oauth2 = init(:github, github_options)
 end # module Auth
 
 using .Auth
-export google_oauth2, github_oauth2
+export google_oauth2, github_oauth2, newSessionId
