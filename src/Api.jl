@@ -129,7 +129,6 @@ function AuthMiddleware(handler)
     return function(req::HTTP.Request)
         path = URI(req.target).path
         current = getCurrentUser(req)
-        println("auth current=$(current)")
         protected = any(map(x -> x == path, PROTECTED_URLS))
         if protected
             if isnothing(current)
@@ -146,7 +145,6 @@ end
 
 @get "/" function(req::HTTP.Request)
     current  = getCurrentUser(req)
-    println("current = $(current)")
     if isnothing(current)
         return redirect(AUTH_URL)
     end
@@ -180,7 +178,8 @@ end
     google_oauth2.token_exchange(code,
         function (tokens::Google.Tokens, user::Google.User)
             println(tokens.access_token)
-            println(tokens.refresh_token)
+            # offline access only
+            #println(tokens.refresh_token)
             println("google email=$(user.email)")
             if !haskey(accounts, user.email)
                 accounts[user.email] = Account(User(user.given_name, user.email, "google"), user.picture, tokens.access_token)

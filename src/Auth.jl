@@ -1,6 +1,7 @@
 module Auth
 
 using Umbrella
+using Umbrella.Google
 using UUIDs
 
 include("Init.jl")
@@ -23,6 +24,7 @@ const google_options = Configuration.Options(;
     success_redirect = "/",
     failure_redirect = AUTH_URL,
     scopes = ["profile", "openid", "email"],
+    providerOptions = GoogleOptions(access_type="online")
 )
 const google_oauth2 = init(:google, google_options)
 
@@ -45,6 +47,7 @@ function newGoogleState()
         failure_redirect = AUTH_URL,
         scopes = ["profile", "openid", "email"],
         state = newSessionId(),
+        providerOptions = GoogleOptions(access_type="online")
     )
 end
 
