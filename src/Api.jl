@@ -1,12 +1,14 @@
 module Api
 
 include("Auth.jl")
+include("MovieBase.jl")
 
 using HTTP: Middleware, Cookies
 using HTTP
 using Oxygen
 using OteraEngine
 using Umbrella
+using JSON3
 using URIs: URI, queryparams
 
 using .Init
@@ -149,13 +151,17 @@ end
         return redirect(AUTH_URL)
     end
     tmp = Template("./src/templates/index.html")
-    init = Dict("name" => current.user.name, "avatar" => current.avatar)
+    init = Dict("name" => current.user.name, "avatar" => current.avatar, "movies" => JSON3.write(movies))
     return html(tmp(init))
 end
 
 @get "/auth" function(_::HTTP.Request)
     tmp = Template("./src/templates/auth.html")
     return html(tmp())
+end
+
+@get "/movies" function(_::HTTP.Request)
+    return movies
 end
 
 @get "/oauth2/google" function(_::HTTP.Request)
