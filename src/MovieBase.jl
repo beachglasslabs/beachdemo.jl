@@ -20,10 +20,12 @@ Movie() = Movie(nothing, "", "", "", "", "", "")
 StructTypes.StructType(::Type{Movie}) = StructTypes.Mutable()
 
 function importData(file="movies.json")
+    movies = Dict{String, Movie}()
     json_string = read(file, String)
-    movies = JSON3.read(json_string, Vector{Movie})
-    for movie in movies
+    all_movies = JSON3.read(json_string, Vector{Movie})
+    for movie in all_movies
         movie.id = string(uuid1().value, base=16)
+        movies[movie.id] = movie
     end
     return movies
 end

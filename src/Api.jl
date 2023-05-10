@@ -151,7 +151,9 @@ end
         return redirect(AUTH_URL)
     end
     tmp = Template("./src/templates/index.html")
-    init = Dict("name" => current.user.name, "avatar" => current.avatar, "movies" => JSON3.write(movies))
+    init = Dict("name" => current.user.name,
+                "avatar" => current.avatar,
+                "movies" => JSON3.write(collect(values(movies))))
     return html(tmp(init))
 end
 
@@ -161,7 +163,13 @@ end
 end
 
 @get "/movies" function(_::HTTP.Request)
-    return movies
+    return collect(values(movies))
+end
+
+@get "/movies/{id}" function(_::HTTP.Request, id::String)
+    tmp = Template("./src/templates/movie.html")
+    init = Dict("movie" => JSON3.write(movies[id]))
+    return html(tmp(init))
 end
 
 @get "/oauth2/google" function(_::HTTP.Request)
