@@ -153,7 +153,8 @@ end
     tmp = Template("./src/templates/index.html")
     init = Dict("name" => current.user.name,
                 "avatar" => current.avatar,
-                "movies" => JSON3.write(collect(values(movies))))
+                "movies" => JSON3.write(collect(values(movies))),
+                "random" => rand(0:length(movies)-1))
     return html(tmp(init))
 end
 

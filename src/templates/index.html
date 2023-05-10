@@ -20,14 +20,12 @@
       document.addEventListener('alpine:init', () => {
               Alpine.store('data', {
                 movies: ``` movies ```,
-                random() {
-                    return Math.floor(Math.random() * this.movies.length)
-                }
+                random: ``` random ```,
               })
       })
     </script>
     <header>
-      <div class="z-50 transition duration-300 bg-black bg-opacity-80 flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0" x-data="{ visible: false }" x-show="visible" x-cloak>
+      <div class="z-50 transition duration-300 bg-black bg-opacity-80 flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0" x-data="{ visible: false, movie: $store.data.movies[$store.data.random] }" x-show="visible" x-cloak>
         <div class="relative w-auto mx-auto max-w-3xl rounded-md overflow-hidden">
           <div :class="visible ? 'scale-100' : 'scale-0'" class="transform duration-300 relative flex-auto bg-zinc-900 drop-shadow-md">
             <div class="relative h-96">
@@ -124,7 +122,7 @@
       </nav>
     </header>
     <main>
-      <section class="relative h-[56.25vw]" x-data="{ movie: $store.data.movies[$store.data.random()] }">
+      <section class="relative h-[56.25vw]" x-data="{ movie: $store.data.movies[$store.data.random] }">
         <video class="w-full h-[56.25vw] object-cover brightness-[60%] transition duration-500"
                autoPlay muted loop
                :poster="movie.thumbnailUrl"
