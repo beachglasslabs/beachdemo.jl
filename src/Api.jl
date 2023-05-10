@@ -152,9 +152,7 @@ end
     end
     tmp = Template("./src/templates/index.html")
     init = Dict("name" => current.user.name,
-                "avatar" => current.avatar,
-                "movies" => JSON3.write(collect(values(movies))),
-                "random" => rand(0:length(movies)-1))
+                "avatar" => current.avatar)
     html(tmp(; tmp_init=init))
 end
 
@@ -168,8 +166,17 @@ end
 end
 
 @get "/movies/{id}" function(_::HTTP.Request, id::String)
+    movies[id]
+end
+
+@get "/movies/random" function(_::HTTP.Request)
+    id = rand(keys(movies))
+    movies[id]
+end
+
+@get "/watch/{id}" function(_::HTTP.Request, id::String)
     tmp = Template("./src/templates/movie.html")
-    init = Dict("movie" => JSON3.write(movies[id]))
+    init = Dict("movie" => JSON3.write(movies[id]), "id" => id)
     html(tmp(; tmp_init=init))
 end
 

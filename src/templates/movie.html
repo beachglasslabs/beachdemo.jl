@@ -16,14 +16,7 @@
     <link rel="stylesheet" href="/style.css">
   </head>
   <body>
-    <script>
-      document.addEventListener('alpine:init', () => {
-              Alpine.store('data', {
-                    movie: {{movie}},
-              })
-      })
-    </script>
-    <div class="h-screen w-screen bg-black" x-data="{ movie: $store.data.movie }">
+    <div class="h-screen w-screen bg-black" x-data="{ movie: {} }" x-init="movie = await (await fetch('/movies/{{id}}')).json()">
       <nav class="fixed w-full p-4 z-10 flex flex-row items-center gap-8 bg-black bg-opacity-70">
         <img @click="location.href='/'" src="/img/aioutlinearrowleft.svg" class="text-white cursor-pointer">
         <p class="text-white text-1xl md:text-3xl font-bold">

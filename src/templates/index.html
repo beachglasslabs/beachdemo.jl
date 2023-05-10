@@ -15,29 +15,21 @@
     <script src="https://unpkg.com/alpinejs" defer></script>
     <link rel="stylesheet" href="/style.css">
   </head>
-  <body>
-    <script>
-      document.addEventListener('alpine:init', () => {
-              Alpine.store('data', {
-                movies: {{movies}},
-                random: {{random}},
-              })
-      })
-    </script>
-    <header>
-      <div class="z-50 transition duration-300 bg-black bg-opacity-80 flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0" x-data="{ visible: false, movie: $store.data.movies[$store.data.random] }" x-show="visible" x-cloak>
+  <body x-data="{ movies: [] }" x-init="movies = await (await fetch('/movies')).json()">
+    <header x-data="{ modal: false, movie: {} }" x-init="movie = await (await fetch('/movies/random')).json()">
+      <div class="z-50 transition duration-300 bg-black bg-opacity-80 flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0" x-modal="modal" x-show="modal" x-cloak>
         <div class="relative w-auto mx-auto max-w-3xl rounded-md overflow-hidden">
-          <div :class="visible ? 'scale-100' : 'scale-0'" class="transform duration-300 relative flex-auto bg-zinc-900 drop-shadow-md">
+          <div :class="modal ? 'scale-100' : 'scale-0'" class="transform duration-300 relative flex-auto bg-zinc-900 drop-shadow-md">
             <div class="relative h-96">
               <video class="w-full brightness-[60%] object-cover h-full" autoPlay muted loop :poster="movie.thumbnailUrl" :src="movie.videoUrl"></video>
-              <div class="cursor-pointer absolute top-3 right-3 h-10 w-10 rounded-full bg-black bg-opacity-70 flex items-center justify-center" @click="visible = false">
+              <div class="cursor-pointer absolute top-3 right-3 h-10 w-10 rounded-full bg-black bg-opacity-70 flex items-center justify-center" @click="modal = false">
                 <img src="/img/aioutlineclose.svg" class="text-white w-6">
               </div>
 
               <div class="absolute bottom-[10%] left-10">
                 <p class="text-white text-3xl md:text-4xl h-full lg:text-5xl font-bold mb-8" x-text="movie.title"></p>
                 <div class="flex flex-row gap-4 items-center">
-                  <button @click="router.push('/watch/movieId')"
+                  <button @click="location.href='/watch/'+movie.id"
                       class="bg-white rounded-md py-1 md:py-2 px-2 md:px-4 w-auto text-xs lg:text-lg font-semibold flex flex-row items-center hover:bg-neutral-300 transition"
                   >
                     <img src="/img/bsfillplayfill.svg" class="w-4 md:w-7 text-black mr-1">
@@ -118,31 +110,30 @@
           </div>
         </div>
       </nav>
-    </header>
-    <main>
-      <section class="relative h-[56.25vw]" x-data="{ movie: $store.data.movies[$store.data.random] }">
+      <section class="relative h-[56.25vw]">
         <video class="w-full h-[56.25vw] object-cover brightness-[60%] transition duration-500"
                autoPlay muted loop
                :poster="movie.thumbnailUrl"
                :src="movie.videoUrl"></video>
         <div class="absolute top-[30%] md:top-[40%] ml-4 md:ml-16">
           <p class="text-white text-1xl md:text-5xl h-full w-[50%] lg:text-6xl font-bold drop-shadow-xl" x-text="movie.title"></p>
-          <p class="text-white text-[8px] md:text-lg mt-3 md:mt-8 w-[90%] md:w-[80%] lg:w-[50%] drop-shadow-xl" x-text="movie.description">
-          </p>
+          <p class="text-white text-[8px] md:text-lg mt-3 md:mt-8 w-[90%] md:w-[80%] lg:w-[50%] drop-shadow-xl" x-text="movie.description"></p>
           <div class="flex flex-row items-center mt-3 md:mt-4 gap-3">
-            <button @click="location.href='/movies/'+movie.id" x-data
+            <button @click="location.href='/watch/'+movie.id"
                 class="bg-white rounded-md py-1 md:py-2 px-2 md:px-4 w-auto text-xs lg:text-lg font-semibold flex flex-row items-center hover:bg-neutral-300 transition"
             >
               <img src="/img/bsfillplayfill.svg" class="w-4 md:w-7 text-black mr-1">
               Play
             </button>
-            <button @click="handleOpenModal" class="bg-white text-white bg-opacity-30 rounded-md py-1 md:py-2 px-2 md:px=4 w-auto text-xs lg:text-lg font-semibold flex flex-row items-center hover:bg-opacity-20 transition">
+            <button @click="modal = true" class="bg-white text-white bg-opacity-30 rounded-md py-1 md:py-2 px-2 md:px=4 w-auto text-xs lg:text-lg font-semibold flex flex-row items-center hover:bg-opacity-20 transition">
               <img src="/img/aioutlineinfocircle.svg" class="w-4 md:w-7 text-black mr-1">
               More Info
             </button>
           </div>
         </div>
       </section>
+    </header>
+    <main>
       <section x-data="{ lists: [{ id: 1, title: 'Trending Now' },
                              { id: 2, title: 'My List' }] }">
         <template x-for="item in lists" :key="item.id">
@@ -150,7 +141,7 @@
             <div class="px-4 md:px-12 mt-4 space-y-8">
               <p class="text-white text-md md:text-xl lg:text-2xl font-semibold mb-4" x-text="item.title"></p>
               <div class="grid grid-cols-4 gap-2">
-                <template x-for="movie in $store.data.movies" :key="movie.id">
+                <template x-for="movie in movies" :key="movie.id">
                   <div class="group bg-zinc-900 col-span relative h-[12vw]">
                     <img @click="redirectToWatch" :src="movie.thumbnailUrl" alt="Thumbnail" draggable="false"
                          class="cursor-pointer object-cover transition duration shadow-xl rounded-md group-hover:opacity-90 sm:group-hover:opacity-0 delay-300 w-full h-[12vw]">
