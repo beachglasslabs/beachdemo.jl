@@ -169,7 +169,9 @@ end
 
 @get "/movies/{id}" function(_::HTTP.Request, id::String)
     tmp = Template("./src/templates/movie.html")
-    init = Dict("movie" => JSON3.write(movies[id]))
+    println("json=$(JSON3.write(movies[id]))")
+    println("movie=$(movies[id])")
+    init = Dict("movie" => string(JSON3.write(movies[id])))
     return html(tmp(init))
 end
 

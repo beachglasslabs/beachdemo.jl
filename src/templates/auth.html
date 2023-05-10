@@ -5,21 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <!-- Favicon -->
-    <link rel="icon" href="img/favicon.ico" type="image/x-icon" />
-    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="icon" href="/img/favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <title>Beachglass TV</title>
     <script src="https://unpkg.com/htmx.org@1.9.2" integrity="sha384-L6OqL9pRWyyFU3+/bjdSri+iIphTN/bvYyM37tICVyOJkWZLpP2vGn6VUEXgzg6h" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
     <div class="relative h-full w-full bg-[url('img/hero.jpg')] bg-no-repeat bg-center bg-fixed bg-cover">
       <div class="bg-black w-full h-full lg:bg-opacity-50">
         <nav class="px-12 py-5">
-          <img src="img/logo.png" alt="Logo" class="h-12" />
+          <img src="/img/logo.png" alt="Logo" class="h-12" />
         </nav>
         <div class="flex justify-center">
           <form :action="getUrl()" method="POST" class="bg-black bg-opacity-70 px-16 py-16 self-center mt-2 lg:w-2/5 lg:max-w-md rounded-md w-full" x-data="{
@@ -50,10 +50,10 @@
             <button type="submit" class="bg-red-600 py-3 text-white rounded-md w-full mt-10 hover:bg-red-700 transition" x-text="login ? 'Login' : 'Sign up'"></button>
             <div class="flex flex-row items-center gap-4 mt-8 justify-center">
               <div @click="location.href='/oauth2/google'" class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
-                <img src="img/fcgoogle.svg" alt="Google">
+                <img src="/img/fcgoogle.svg" alt="Google">
               </div>
               <div @click="location.href='/oauth2/github'" class="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition">
-                <img src="img/fagithub.svg" alt="Github">
+                <img src="/img/fagithub.svg" alt="Github">
               </div>
             </div>
             <p class="text-neutral-500 mt-12">

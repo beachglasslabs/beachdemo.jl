@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <!-- Favicon -->
-    <link rel="icon" href="img/favicon.ico" type="image/x-icon" />
-    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="icon" href="/img/favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <title>Beachglass TV</title>
     <script src="https://unpkg.com/htmx.org@1.9.2" integrity="sha384-L6OqL9pRWyyFU3+/bjdSri+iIphTN/bvYyM37tICVyOJkWZLpP2vGn6VUEXgzg6h" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/alpinejs" defer></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
     <script>
@@ -31,7 +31,7 @@
             <div class="relative h-96">
               <video class="w-full brightness-[60%] object-cover h-full" autoPlay muted loop :poster="movie.thumbnailUrl" :src="movie.videoUrl"></video>
               <div class="cursor-pointer absolute top-3 right-3 h-10 w-10 rounded-full bg-black bg-opacity-70 flex items-center justify-center" @click="visible = false">
-                <img src="img/aioutlineclose.svg" class="text-white w-6">
+                <img src="/img/aioutlineclose.svg" class="text-white w-6">
               </div>
 
               <div class="absolute bottom-[10%] left-10">
@@ -40,13 +40,13 @@
                   <button @click="router.push('/watch/movieId')"
                       class="bg-white rounded-md py-1 md:py-2 px-2 md:px-4 w-auto text-xs lg:text-lg font-semibold flex flex-row items-center hover:bg-neutral-300 transition"
                   >
-                    <img src="img/bsfillplayfill.svg" class="w-4 md:w-7 text-black mr-1">
+                    <img src="/img/bsfillplayfill.svg" class="w-4 md:w-7 text-black mr-1">
                     Play
                   </button>
                   <div @click="toggleFavorite"
                       class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300"
                   >
-                    <img :src="false ? 'img/aioutlinecheck.svg' : 'img/aioutlineplus.svg'" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
+                    <img :src="false ? '/img/aioutlinecheck.svg' : '/img/aioutlineplus.svg'" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
                   </div>
                 </div>
               </div>
@@ -71,7 +71,7 @@
         }"
       >
         <div class="px-4 md:px-16 py-6 flex flex-row items-center transition duration-500" :class="background ? 'bg-zinc-900 bg-opacity-90' : ''">
-          <img class="h-4 lg:h-7" src="img/logo.png" alt="Logo">
+          <img class="h-4 lg:h-7" src="/img/logo.png" alt="Logo">
           <div class="flex-row ml-8 gap-7 hidden lg:flex">
             <template x-for="item in menu" :key="item.id">
               <div @click="active = item.id" :class="item.id == active ? 'text-white cursor-default' : 'text-gray-200 hover:text-gray-300 cursor-pointer transition'" x-text="item.label">
@@ -80,7 +80,7 @@
           </div>
           <div @click="mobile = !mobile" class="lg:hidden flex flex-row items-center gap-2 ml-8 cursor-pointer relative">
             <p class="text-white text-sm">Browse</p>
-            <img src="img/bschevrondown.svg" class="w-4 text-white fill-white transition" :class="mobile ? 'rotate-180' : 'rotate-0'">
+            <img src="/img/bschevrondown.svg" class="w-4 text-white fill-white transition" :class="mobile ? 'rotate-180' : 'rotate-0'">
             <div x-show="mobile" class="bg-black w-56 absolute top-8 left-0 py-5 flex-col border-2 border-gray-800 flex">
               <div class="flex flex-col gap-4">
                 <template x-for="item in menu" :key="item.id">
@@ -92,16 +92,16 @@
           </div>
           <div class="flex flex-row ml-auto gap-7 items-center">
             <div class="text-gray-200 hover:text-gray-300 cursor-pointer transition">
-              <img src="img/bssearch.svg" alt="Search" class="w-6">
+              <img src="/img/bssearch.svg" alt="Search" class="w-6">
             </div>
             <div class="text-gray-200 hover:text-gray-300 cursor-pointer transition">
-              <img src="img/bsbell.svg" alt="Notification" class="w-6">
+              <img src="/img/bsbell.svg" alt="Notification" class="w-6">
             </div>
             <div @click="account = !account" class="flex flex-row items-center gap2 cursor-pointer relative">
               <div class="w-6 h-6 lg:w-10 lg:h-10 rounded-md overflow-hidden">
                 <img src="```avatar```" alt="Profile">
               </div>
-              <img src="img/bschevrondown.svg" class="w-4 text-white fill-white transition" :class="account ? 'rotate-180' : 'rotate-0'">
+              <img src="/img/bschevrondown.svg" class="w-4 text-white fill-white transition" :class="account ? 'rotate-180' : 'rotate-0'">
               <div x-show="account" class="bg-black w-56 absolute top-14 right-0 py-5 flex-col border-2 border-gray-800 flex" x-cloak>
                 <div class="flex flex-col gap-3">
                   <div hx-get="/profiles" hx-target="body" hx-swap="outerHTML" class="px-3 group/item flex flex-row gap-3 item-center w-full">
@@ -135,11 +135,11 @@
             <button :hx-get="'/movies/' + movie.id" hx-target="body" hx-swap="outerHTML"
                 class="bg-white rounded-md py-1 md:py-2 px-2 md:px-4 w-auto text-xs lg:text-lg font-semibold flex flex-row items-center hover:bg-neutral-300 transition"
             >
-              <img src="img/bsfillplayfill.svg" class="w-4 md:w-7 text-black mr-1">
+              <img src="/img/bsfillplayfill.svg" class="w-4 md:w-7 text-black mr-1">
               Play
             </button>
             <button @click="handleOpenModal" class="bg-white text-white bg-opacity-30 rounded-md py-1 md:py-2 px-2 md:px=4 w-auto text-xs lg:text-lg font-semibold flex flex-row items-center hover:bg-opacity-20 transition">
-              <img src="img/aioutlineinfocircle.svg" class="w-4 md:w-7 text-black mr-1">
+              <img src="/img/aioutlineinfocircle.svg" class="w-4 md:w-7 text-black mr-1">
               More Info
             </button>
           </div>
@@ -162,15 +162,15 @@
                       <div class="z-10 bg-zinc-800 p-2 lg:p-4 absolute w-full transition shadow-md rounded-b-md">
                         <div class="flex flex-row items-center gap-3">
                           <div @click="redirectToWatch" class="cursor-pointer w-6 h-6 lg:w-10 lg:h-10 bg-white rounded-full flex justify-center items-center transition hover:bg-neutral-300">
-                            <img src="img/bsfillplayfill.svg" class="text-black w-4 lg:w-6">
+                            <img src="/img/bsfillplayfill.svg" class="text-black w-4 lg:w-6">
                           </div>
                           <div @click="toggleFavorite"
                               class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300"
                           >
-                            <img :src="false ? 'img/aioutlinecheck.svg' : 'img/aioutlineplus.svg'" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
+                            <img :src="false ? '/img/aioutlinecheck.svg' : '/img/aioutlineplus.svg'" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
                           </div>
                           <div @click="openModal(movie.id)" class="cursor-pointer ml-auto group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300">
-                            <img src="img/bichevrondown.svg" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
+                            <img src="/img/bichevrondown.svg" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
                           </div>
                         </div>
                         <p class="text-green-400 font-semibold mt-4">
