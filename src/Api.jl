@@ -103,14 +103,14 @@ function redirect(location::String, token::String, days::Integer = 3)
 end
 
 function getAvatar()
-    return rand(String["/img/default-blue.png",
-                       "/img/default-red.png",
-                       "/img/default-slate.png",
-                       "/img/default-green.png"])
+    rand(String["/img/default-blue.png",
+                "/img/default-red.png",
+                "/img/default-slate.png",
+                "/img/default-green.png"])
 end
 
 function parseForm(req::HTTP.Request)
-    return queryparams(String(HTTP.payload(req)))
+    queryparams(String(HTTP.payload(req)))
 end
 
 function validateForm(form::Dict{String, String}, fields::Vector{String})
@@ -155,24 +155,22 @@ end
                 "avatar" => current.avatar,
                 "movies" => JSON3.write(collect(values(movies))),
                 "random" => rand(0:length(movies)-1))
-    return html(tmp(init))
+    html(tmp(; tmp_init=init))
 end
 
 @get "/auth" function(_::HTTP.Request)
     tmp = Template("./src/templates/auth.html")
-    return html(tmp())
+    html(tmp())
 end
 
 @get "/movies" function(_::HTTP.Request)
-    return collect(values(movies))
+    collect(values(movies))
 end
 
 @get "/movies/{id}" function(_::HTTP.Request, id::String)
     tmp = Template("./src/templates/movie.html")
-    println("json=$(JSON3.write(movies[id]))")
-    println("movie=$(movies[id])")
-    init = Dict("movie" => string(JSON3.write(movies[id])))
-    return html(tmp(init))
+    init = Dict("movie" => JSON3.write(movies[id]))
+    html(tmp(; tmp_init=init))
 end
 
 @get "/oauth2/google" function(_::HTTP.Request)
@@ -254,7 +252,7 @@ end
     end
     tmp = Template("./src/templates/profiles.html")
     init = Dict("name" => current.user.name, "avatar" => current.avatar)
-    return html(tmp(init))
+    html(tmp(; tmp_init=init))
 end
 
 @post "/logout" function(req::HTTP.Request)
