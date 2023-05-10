@@ -321,3 +321,5 @@ staticfiles("public", "/")
 serve(port=PORT, middleware=[CorsMiddleware, AuthMiddleware])
 
 end # module Api
+
+using .Api
