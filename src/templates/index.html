@@ -15,7 +15,7 @@
     <script src="https://unpkg.com/alpinejs" defer></script>
     <link rel="stylesheet" href="/style.css">
   </head>
-  <body x-data="{ movies: [] }" x-init="movies = await (await fetch('/movies')).json()">
+  <body>
     <header x-data="{ modal: false, movie: {} }" x-init="movie = await (await fetch('/movies/random')).json()">
       <div class="z-50 transition duration-300 bg-black bg-opacity-80 flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0" x-modal="modal" x-show="modal" x-cloak>
         <div class="relative w-auto mx-auto max-w-3xl rounded-md overflow-hidden">
@@ -29,7 +29,7 @@
               <div class="absolute bottom-[10%] left-10">
                 <p class="text-white text-3xl md:text-4xl h-full lg:text-5xl font-bold mb-8" x-text="movie.title"></p>
                 <div class="flex flex-row gap-4 items-center">
-                  <button @click="location.href='/watch/'+movie.id"
+                  <button :hx-get="'/watch/'+movie.id" hx-target="body"
                       class="bg-white rounded-md py-1 md:py-2 px-2 md:px-4 w-auto text-xs lg:text-lg font-semibold flex flex-row items-center hover:bg-neutral-300 transition"
                   >
                     <img src="/img/bsfillplayfill.svg" class="w-4 md:w-7 text-black mr-1">
@@ -96,12 +96,12 @@
               <img src="/img/bschevrondown.svg" class="w-4 text-white fill-white transition" :class="account ? 'rotate-180' : 'rotate-0'">
               <div x-show="account" class="bg-black w-56 absolute top-14 right-0 py-5 flex-col border-2 border-gray-800 flex" x-cloak>
                 <div class="flex flex-col gap-3">
-                  <div hx-get="/profiles" hx-target="body" hx-swap="outerHTML" class="px-3 group/item flex flex-row gap-3 item-center w-full">
+                  <div hx-get="/profiles" hx-target="body" class="px-3 group/item flex flex-row gap-3 item-center w-full">
                     <img draggable="false" class="w-8 rounded-md" src={{avatar}} alt="Profile">
                     <p class="text-white text-sm group-hover/item:userline">{{name}}</p>
                   </div>
                   <hr class="bg-gray-600 border-0 h-px my-4" />
-                  <div hx-post="/logout" hx-target="body" hx-swap="outerHTML" class="px-3 text-center text-white text-sm hover:underline">
+                  <div hx-post="/logout" hx-target="body" class="px-3 text-center text-white text-sm hover:underline">
                     Sign out of Beachglass
                   </div>
                 </div>
@@ -119,7 +119,7 @@
           <p class="text-white text-1xl md:text-5xl h-full w-[50%] lg:text-6xl font-bold drop-shadow-xl" x-text="movie.title"></p>
           <p class="text-white text-[8px] md:text-lg mt-3 md:mt-8 w-[90%] md:w-[80%] lg:w-[50%] drop-shadow-xl" x-text="movie.description"></p>
           <div class="flex flex-row items-center mt-3 md:mt-4 gap-3">
-            <button @click="location.href='/watch/'+movie.id"
+            <button :hx-get="'/watch/'+movie.id" hx-target="body"
                 class="bg-white rounded-md py-1 md:py-2 px-2 md:px-4 w-auto text-xs lg:text-lg font-semibold flex flex-row items-center hover:bg-neutral-300 transition"
             >
               <img src="/img/bsfillplayfill.svg" class="w-4 md:w-7 text-black mr-1">
@@ -133,7 +133,7 @@
         </div>
       </section>
     </header>
-    <main>
+    <main x-data="{ movies: [] }" x-init="movies = await (await fetch('/movies')).json()">
       <section x-data="{ lists: [{ id: 1, title: 'Trending Now' },
                              { id: 2, title: 'My List' }] }">
         <template x-for="item in lists" :key="item.id">
