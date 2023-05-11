@@ -16,7 +16,7 @@ export Init
 readenv()
 
 function newSessionId()
-    string(uuid1().value, base=16)
+    string(uuid4().value, base=16)
 end
 
 function googleOptions(session::Union{String, Nothing} = nothing)
