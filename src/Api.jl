@@ -1,6 +1,5 @@
-module Api
-
 include("Auth.jl")
+include("User.jl")
 include("MovieBase.jl")
 
 using HTTP: Middleware, Cookies
@@ -11,28 +10,14 @@ using Umbrella
 using JSON3
 using URIs: URI, queryparams
 
-using .Init
-using .Auth
-
 const PROTECTED_URLS = [ "/", "/profiles" ]
+const PROTECTED_APIS = [ "/movies", "/favorites" ]
 
 const CORS_HEADERS = [
     "Access-Control-Allow-Origin" => "*",
     "Access-Control-Allow-Headers" => "*",
     "Access-Control-Allow-Methods" => "POST, GET, OPTIONS"
 ]
-
-mutable struct User
-    name::String
-    email::String
-    password::Union{String, Nothing}
-end
-
-mutable struct Account
-    user::User
-    avatar::String
-    jwt::String
-end
 
 # email -> account(user)
 const accounts = Dict{String, Account}()
@@ -102,13 +87,6 @@ function redirect(location::String, token::String, days::Integer = 3)
                                "Location" => location])
 end
 
-function getAvatar()
-    rand(String["/img/default-blue.png",
-                "/img/default-red.png",
-                "/img/default-slate.png",
-                "/img/default-green.png"])
-end
-
 function parseForm(req::HTTP.Request)
     queryparams(String(HTTP.payload(req)))
 end
@@ -131,7 +109,7 @@ function AuthMiddleware(handler)
     return function(req::HTTP.Request)
         path = URI(req.target).path
         current = getCurrentUser(req)
-        protected = any(map(x -> x == path, PROTECTED_URLS))
+        protected = any(map(x -> x == path, PROTECTED_URLS)) || any(map(x -> startswith(path, x), PROTECTED_APIS))
         if protected
             if isnothing(current)
                 return redirect(AUTH_URL)
@@ -178,6 +156,27 @@ end
     tmp = Template("./src/templates/movie.html")
     init = Dict("movie" => JSON3.write(movies[id]), "id" => id)
     html(tmp(; tmp_init=init))
+end
+
+@get "/favorites" function(req::HTTP.Request)
+    current = getCurrentUser(req)
+    if !isnothing(current)
+        current.favorites
+    end
+end
+
+@post "/favorites/{movieId}" function(req::HTTP.Request, movieId::String)
+    current = getCurrentUser(req)
+    if !isnothing(current)
+        addFavorite(current, movieId)
+    end
+end
+
+@delete "/favorites/{movieId}" function(req::HTTP.Request, movieId::String)
+    current = getCurrentUser(req)
+    if !isnothing(current)
+        removeFavorite(current, movieId)
+    end
 end
 
 @get "/oauth2/google" function(_::HTTP.Request)
@@ -325,6 +324,3 @@ staticfiles("public", "/")
 # set application level middleware
 serve(port=PORT, middleware=[CorsMiddleware, AuthMiddleware])
 
-end # module Api
-
-using .Api

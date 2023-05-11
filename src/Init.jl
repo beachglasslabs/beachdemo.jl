@@ -1,7 +1,3 @@
-module Init
-
-export PORT, SERVER_URL, AUTH_URL, readenv
-
 const PORT = 3000
 const SERVER_URL = "http://localhost:" * string(PORT)
 const AUTH_URL = "/auth"
@@ -24,7 +20,3 @@ function readenv(env=".env")
     println("Loaded env from $(pwd() * "/" * env)")
 end
 
-end # module Init
-
-using .Init
-export PORT, SERVER_URL

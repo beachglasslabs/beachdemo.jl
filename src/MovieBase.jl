@@ -1,10 +1,6 @@
-module MovieBase
-
 using JSON3
 using StructTypes
 using UUIDs
-
-export Movie, movies
 
 mutable struct Movie
     id::Union{String,Nothing}
@@ -25,6 +21,7 @@ function importData(file="movies.json")
     all_movies = JSON3.read(json_string, Vector{Movie})
     for movie in all_movies
         movie.id = string(uuid4().value, base=16)
+        println("movie id = $(movie.id)")
         movies[movie.id] = movie
     end
     return movies
@@ -32,7 +29,3 @@ end
 
 const movies = importData()
 
-end # module MovieBase
-
-using .MovieBase
-export Movie, movies

@@ -1,5 +1,3 @@
-module Auth
-
 using Umbrella
 using Umbrella.Google
 using Dates
@@ -7,11 +5,6 @@ using UUIDs
 using JSONWebTokens
 
 include("Init.jl")
-
-using .Init
-
-export newSessionId, newJwt, newCookie, googleOptions, githubOptions
-export Init
 
 readenv()
 
@@ -54,7 +47,3 @@ function newCookie(token::String, days::Integer = 3)
     "token=$(token); Max-Age=$(datetime2unix(now() + Day(days))); Path=/; SameSize=None;"
 end
 
-end # module Auth
-
-using .Auth
-export newSessionId, newJwt, newCookie, googleOptions, githubOptions
