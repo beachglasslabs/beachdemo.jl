@@ -21,18 +21,36 @@
               Alpine.store('modal', {
                       visible: false,
                       movie: {},
+                      favorites: [],
                       close() {
                               this.visible = false
                             },
                       async open(id) {
                               this.movie = await (await fetch('/movies/' + id)).json()
+                              this.favorites = await (await fetch('/favorites')).json()
                               this.visible = true
-                            }
+                            },
+                      isFavorite(movie) {
+                              return this.favorites.includes(movie.id)
+                            },
+                      async addFavorite(movie) {
+                              if (!this.isFavorite(movie.id)) {
+                                      this.favorites = await (await fetch('/favorites/' + movie.id, {method: 'POST'})).json()
+                                    }
+                            },
+                      async removeFavorite(movie) {
+                              if (this.isFavorites(movie.id)) {
+                                      idx = this.favorites.indexOf(id)
+                                      if (idx >= 0) {
+                                              this.favorites = await (await fetch('/favorites/' + movie.id, {method: 'DELETE'})).json()
+                                            }
+                                    }
+                            },
                     })
               })
     </script>
     <header x-data="{ playMovie(id) { location.href='/watch/' + id } }">
-      <div class="z-50 transition duration-300 bg-black bg-opacity-80 flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0" x-show="$store.modal.visible" x-cloak x-data="{ favorite: false }"> <!-- info modal -->
+      <div class="z-50 transition duration-300 bg-black bg-opacity-80 flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0" x-show="$store.modal.visible"> <!-- info modal -->
         <div class="relative w-auto mx-auto max-w-3xl rounded-md overflow-hidden">
           <div :class="$store.modal.visible? 'scale-100' : 'scale-0'" class="transform duration-300 relative flex-auto bg-zinc-900 drop-shadow-md">
             <div class="relative h-96">
@@ -57,20 +75,23 @@
                     </div> <!-- play button -->
                     Play
                   </button>
-                  <div @click="favorite = !favorite"
-                        class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300"
+                  <div class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300"
                   >
                     <!-- begin add to favorites -->
-                    <div class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6" x-show="!favorite" x-cloak>
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                      </svg>
-                    </div>
-                    <div class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6" x-show="favorite" x-cloak>
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                    </div>
+                    <template x-if="!$store.modal.isFavorite($store.modal.movie)">
+                      <div @click="$store.modal.addFavorite($store.modal.movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                      </div>
+                    </template>
+                    <template x-if="$store.modal.isFavorite($store.modal.movie)">
+                      <div @click="$store.modal.removeFavorite($store.modal.movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6"></div>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      </div>
+                    </template>
                     <!-- end add to favorites -->
                   </div>
                 </div>
@@ -190,7 +211,7 @@
         </div>
       </section>
     </header>
-    <main x-data="{ movies: [], playMovie(id) { location.href = '/watch/' + id } }" x-init="movies = await (await fetch('/movies')).json()">
+    <main x-data="{ movies: [], playMovie(id) { location.href = '/watch/' + id }, addFavorite(movie) { $store.modal.addFavorite(movie) }, removeFavorite(movie) { $store.modal.removeFavorite(movie) } }" x-init="movies = await (await fetch('/movies')).json()">
       <section x-data="{ lists: [{ id: 1, title: 'Trending Now' },
                              { id: 2, title: 'My List' }] }">
         <template x-for="item in lists" :key="item.id">
@@ -199,7 +220,7 @@
               <p class="text-white text-md md:text-xl lg:text-2xl font-semibold mb-4" x-text="item.title"></p>
               <div class="grid grid-cols-4 gap-2">
                 <template x-for="movie in movies" :key="movie.title">
-                  <div class="group bg-zinc-900 col-span relative h-[12vw]" x-data="{  favorite: false }">
+                  <div class="group bg-zinc-900 col-span relative h-[12vw]">
                     <img @click="playMovie(movie.id)" :src="movie.thumbnailUrl" alt="Thumbnail" draggable="false"
                          class="cursor-pointer object-cover transition duration shadow-xl rounded-md group-hover:opacity-90 sm:group-hover:opacity-0 delay-300 w-full h-[12vw]">
                     <div class="opacity-0 absolute top-0 transition duration-200 z-10 invisible sm:visible delay-300 w-full scale-0 group-hover:scale-110 group-hover:-translate-y-[6vw] group-hover:translate-x-[2vw] group-hover:opacity-100">
@@ -214,20 +235,23 @@
                               </svg>
                             </div> <!-- play button -->
                           </button>
-                          <button @click="favorite = !favorite"
-                              class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300"
+                          <button class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300"
                           >
                             <!-- add to favorites -->
-                            <div class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6" x-show="!favorite" x-cloak> 
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                              </svg>
-                            </div>
-                            <div class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6" x-show="favorite" x-cloak>
-                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                              </svg>
-                            </div>
+                            <template x-if="!$store.modal.isFavorite(movie)">
+                              <div @click="$store.modal.addFavorite(movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6"></div>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                              </div>
+                            </template>
+                            <template x-if="$store.modal.isFavorite(movie)">
+                              <div @click="$store.modal.removeFavorite(movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                              </div>
+                            </template>
                             <!-- end add to favorites -->
                           </button>
                           <button @click="$store.modal.open(movie.id)" class="cursor-pointer ml-auto group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300">

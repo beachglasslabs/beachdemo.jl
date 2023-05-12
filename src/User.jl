@@ -13,7 +13,7 @@ mutable struct Account
 end
 
 function addFavorite(user::Account, new::String)
-    if ! new in user.favorites   
+    if ! (new in user.favorites)  
         push!(user.favorites, new)
     end
 end

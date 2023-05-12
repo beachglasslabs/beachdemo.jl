@@ -16,7 +16,7 @@ const PROTECTED_APIS = [ "/movies", "/favorites" ]
 const CORS_HEADERS = [
     "Access-Control-Allow-Origin" => "*",
     "Access-Control-Allow-Headers" => "*",
-    "Access-Control-Allow-Methods" => "POST, GET, OPTIONS"
+    "Access-Control-Allow-Methods" => "POST, GET, PUT, OPTIONS"
 ]
 
 # email -> account(user)
@@ -169,6 +169,7 @@ end
     current = getCurrentUser(req)
     if !isnothing(current)
         addFavorite(current, movieId)
+        current.favorites
     end
 end
 
@@ -176,6 +177,7 @@ end
     current = getCurrentUser(req)
     if !isnothing(current)
         removeFavorite(current, movieId)
+        current.favorites
     end
 end
 
