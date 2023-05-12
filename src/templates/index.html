@@ -18,38 +18,43 @@
   <body>
     <script>
       document.addEventListener('alpine:init', () => {
-              Alpine.store('modal', {
-                      visible: false,
-                      movie: {},
+              Alpine.data('favdata', () => ({
                       favorites: [],
-                      close() {
-                              this.visible = false
-                            },
-                      async open(id) {
-                              this.movie = await (await fetch('/movies/' + id)).json()
+                      async init() {
                               this.favorites = await (await fetch('/favorites')).json()
-                              this.visible = true
+                            },
+                      playMovie(id) {
+                              location.href = '/watch/' + id
                             },
                       isFavorite(movie) {
                               return this.favorites.includes(movie.id)
                             },
                       async addFavorite(movie) {
-                              if (!this.isFavorite(movie.id)) {
+                              if (!this.isFavorite(movie)) {
                                       this.favorites = await (await fetch('/favorites/' + movie.id, {method: 'POST'})).json()
                                     }
                             },
                       async removeFavorite(movie) {
-                              if (this.isFavorites(movie.id)) {
-                                      idx = this.favorites.indexOf(id)
-                                      if (idx >= 0) {
-                                              this.favorites = await (await fetch('/favorites/' + movie.id, {method: 'DELETE'})).json()
-                                            }
+                              if (this.isFavorite(movie)) {
+                                      this.favorites = await (await fetch('/favorites/' + movie.id, {method: 'DELETE'})).json()
                                     }
+                            },
+                    }),
+                    )
+              Alpine.store('modal', {
+                      visible: false,
+                      movie: {},
+                      close() {
+                              this.visible = false
+                            },
+                      async open(id) {
+                              this.movie = await (await fetch('/movies/' + id)).json()
+                              this.visible = true
                             },
                     })
               })
     </script>
-    <header x-data="{ playMovie(id) { location.href='/watch/' + id } }">
+    <header x-data="favdata">
       <div class="z-50 transition duration-300 bg-black bg-opacity-80 flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0" x-show="$store.modal.visible"> <!-- info modal -->
         <div class="relative w-auto mx-auto max-w-3xl rounded-md overflow-hidden">
           <div :class="$store.modal.visible? 'scale-100' : 'scale-0'" class="transform duration-300 relative flex-auto bg-zinc-900 drop-shadow-md">
@@ -78,15 +83,15 @@
                   <div class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300"
                   >
                     <!-- begin add to favorites -->
-                    <template x-if="!$store.modal.isFavorite($store.modal.movie)">
-                      <div @click="$store.modal.addFavorite($store.modal.movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
+                    <template x-if="!isFavorite($store.modal.movie)">
+                      <div @click="addFavorite($store.modal.movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
                       </div>
                     </template>
-                    <template x-if="$store.modal.isFavorite($store.modal.movie)">
-                      <div @click="$store.modal.removeFavorite($store.modal.movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6"></div>
+                    <template x-if="isFavorite($store.modal.movie)">
+                      <div @click="removeFavorite($store.modal.movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
@@ -211,15 +216,16 @@
         </div>
       </section>
     </header>
-    <main x-data="{ movies: [], playMovie(id) { location.href = '/watch/' + id }, addFavorite(movie) { $store.modal.addFavorite(movie) }, removeFavorite(movie) { $store.modal.removeFavorite(movie) } }" x-init="movies = await (await fetch('/movies')).json()">
-      <section x-data="{ lists: [{ id: 1, title: 'Trending Now' },
-                             { id: 2, title: 'My List' }] }">
+    <main x-data="favdata">
+      <section x-data="{ lists: [{ id: 1, title: 'Trending Now', movies: [] },
+               { id: 2, title: 'My List', movies: [] }] }"
+               x-init="lists[0].movies = await (await fetch('/movies')).json(); lists[1].movies = await (await fetch('/movies/favorites')).json()">
         <template x-for="item in lists" :key="item.id">
           <article class="pb-40">
             <div class="px-4 md:px-12 mt-4 space-y-8">
               <p class="text-white text-md md:text-xl lg:text-2xl font-semibold mb-4" x-text="item.title"></p>
               <div class="grid grid-cols-4 gap-2">
-                <template x-for="movie in movies" :key="movie.title">
+                <template x-for="movie in item.movies" :key="movie.id">
                   <div class="group bg-zinc-900 col-span relative h-[12vw]">
                     <img @click="playMovie(movie.id)" :src="movie.thumbnailUrl" alt="Thumbnail" draggable="false"
                          class="cursor-pointer object-cover transition duration shadow-xl rounded-md group-hover:opacity-90 sm:group-hover:opacity-0 delay-300 w-full h-[12vw]">
@@ -238,15 +244,15 @@
                           <button class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300"
                           >
                             <!-- add to favorites -->
-                            <template x-if="!$store.modal.isFavorite(movie)">
-                              <div @click="$store.modal.addFavorite(movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6"></div>
+                            <template x-if="!isFavorite(movie)">
+                              <div @click="addFavorite(movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                 </svg>
                               </div>
                             </template>
-                            <template x-if="$store.modal.isFavorite(movie)">
-                              <div @click="$store.modal.removeFavorite(movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
+                            <template x-if="isFavorite(movie)">
+                              <div @click="removeFavorite(movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                                   <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                                 </svg>

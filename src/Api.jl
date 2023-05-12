@@ -152,6 +152,13 @@ end
     movies[id]
 end
 
+@get "/movies/favorites" function(req::HTTP.Request)
+    current = getCurrentUser(req)
+    if !isnothing(current)
+        collect(map(id -> movies[id], current.favorites))
+    end
+end
+
 @get "/watch/{id}" function(_::HTTP.Request, id::String)
     tmp = Template("./src/templates/movie.html")
     init = Dict("movie" => JSON3.write(movies[id]), "id" => id)
