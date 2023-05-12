@@ -152,13 +152,6 @@ end
     movies[id]
 end
 
-@get "/movies/favorites" function(req::HTTP.Request)
-    current = getCurrentUser(req)
-    if !isnothing(current)
-        collect(map(id -> movies[id], current.favorites))
-    end
-end
-
 @get "/watch/{id}" function(_::HTTP.Request, id::String)
     tmp = Template("./src/templates/movie.html")
     init = Dict("movie" => JSON3.write(movies[id]), "id" => id)
@@ -168,7 +161,7 @@ end
 @get "/favorites" function(req::HTTP.Request)
     current = getCurrentUser(req)
     if !isnothing(current)
-        current.favorites
+        collect(map(id -> movies[id], current.favorites))
     end
 end
 
@@ -176,7 +169,7 @@ end
     current = getCurrentUser(req)
     if !isnothing(current)
         addFavorite(current, movieId)
-        current.favorites
+        collect(map(id -> movies[id], current.favorites))
     end
 end
 
@@ -184,7 +177,7 @@ end
     current = getCurrentUser(req)
     if !isnothing(current)
         removeFavorite(current, movieId)
-        current.favorites
+        collect(map(id -> movies[id], current.favorites))
     end
 end
 
