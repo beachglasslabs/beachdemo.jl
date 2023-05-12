@@ -17,27 +17,29 @@
   </head>
   <body>
     <script>
+      function playMovie(id) {
+              location.href = '/watch/' + id
+            }
       document.addEventListener('alpine:init', () => {
-              Alpine.data('favdata', () => ({
+              Alpine.data('moviedata', () => ({
                       favorites: [],
                       async init() {
-                              this.favorites = await (await fetch('/favorites')).json()
-                            },
-                      playMovie(id) {
-                              location.href = '/watch/' + id
+                              this.favorites = await (await fetch('/movies/favorites')).json()
                             },
                       isFavorite(movie) {
-                              return this.favorites.includes(movie.id)
+                              return this.favorites.map(x => x.id).includes(movie.id)
                             },
                       async addFavorite(movie) {
                               if (!this.isFavorite(movie)) {
-                                      this.favorites = await (await fetch('/favorites/' + movie.id, {method: 'POST'})).json()
+                                      await (await fetch('/favorites/' + movie.id, {method: 'POST'})).json()
                                     }
+                              this.favorites = await (await fetch('/movies/favorites')).json()
                             },
                       async removeFavorite(movie) {
                               if (this.isFavorite(movie)) {
-                                      this.favorites = await (await fetch('/favorites/' + movie.id, {method: 'DELETE'})).json()
+                                      await (await fetch('/favorites/' + movie.id, {method: 'DELETE'})).json()
                                     }
+                              this.favorites = await (await fetch('/movies/favorites')).json()
                             },
                     }),
                     )
@@ -54,7 +56,7 @@
                     })
               })
     </script>
-    <header x-data="favdata">
+    <header x-data="moviedata">
       <div class="z-50 transition duration-300 bg-black bg-opacity-80 flex justify-center items-center overflow-x-hidden overflow-y-auto fixed inset-0" x-show="$store.modal.visible"> <!-- info modal -->
         <div class="relative w-auto mx-auto max-w-3xl rounded-md overflow-hidden">
           <div :class="$store.modal.visible? 'scale-100' : 'scale-0'" class="transform duration-300 relative flex-auto bg-zinc-900 drop-shadow-md">
@@ -80,8 +82,7 @@
                     </div> <!-- play button -->
                     Play
                   </button>
-                  <div class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300"
-                  >
+                  <div class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300" x-model="favorites">
                     <!-- begin add to favorites -->
                     <template x-if="!isFavorite($store.modal.movie)">
                       <div @click="addFavorite($store.modal.movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
@@ -216,16 +217,77 @@
         </div>
       </section>
     </header>
-    <main x-data="favdata">
-      <section x-data="{ lists: [{ id: 1, title: 'Trending Now', movies: [] },
-               { id: 2, title: 'My List', movies: [] }] }"
-               x-init="lists[0].movies = await (await fetch('/movies')).json(); lists[1].movies = await (await fetch('/movies/favorites')).json()">
-        <template x-for="item in lists" :key="item.id">
+    <main x-data="moviedata">
+      <section x-data="{ movies: [] }" x-init="movies = await (await fetch('/movies')).json()">
           <article class="pb-40">
             <div class="px-4 md:px-12 mt-4 space-y-8">
-              <p class="text-white text-md md:text-xl lg:text-2xl font-semibold mb-4" x-text="item.title"></p>
+              <p class="text-white text-md md:text-xl lg:text-2xl font-semibold mb-4">Trending Now</p>
               <div class="grid grid-cols-4 gap-2">
-                <template x-for="movie in item.movies" :key="movie.id">
+                <template x-for="movie in movies" :key="movie.id">
+                  <div class="group bg-zinc-900 col-span relative h-[12vw]">
+                    <img @click="playMovie(movie.id)" :src="movie.thumbnailUrl" alt="Thumbnail" draggable="false"
+                         class="cursor-pointer object-cover transition duration shadow-xl rounded-md group-hover:opacity-90 sm:group-hover:opacity-0 delay-300 w-full h-[12vw]">
+                    <div class="opacity-0 absolute top-0 transition duration-200 z-10 invisible sm:visible delay-300 w-full scale-0 group-hover:scale-110 group-hover:-translate-y-[6vw] group-hover:translate-x-[2vw] group-hover:opacity-100">
+                      <img @click="playMovie(movie.id)" :src="movie.thumbnailUrl" alt="Thumbnail" draggable="false"
+                                 class="cursor-pointer object-cover transition duration shadow-xl rounded-t-md w-full h-[12vw]">
+                      <div class="z-10 bg-zinc-800 p-2 lg:p-4 absolute w-full transition shadow-md rounded-b-md">
+                        <div class="flex flex-row items-center gap-3">
+                          <button @click="playMovie(movie.id)" class="cursor-pointer w-6 h-6 lg:w-10 lg:h-10 bg-white rounded-full flex justify-center items-center transition hover:bg-neutral-300">
+                            <div class="text-black w-4 lg:w-6"> <!-- play button -->
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                                <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+                              </svg>
+                            </div> <!-- play button -->
+                          </button>
+                          <button class="cursor-pointer group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300" x-model="favorites">
+                            <!-- add to favorites -->
+                            <template x-if="!isFavorite(movie)">
+                              <div @click="addFavorite(movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                              </div>
+                            </template>
+                            <template x-if="isFavorite(movie)">
+                              <div @click="removeFavorite(movie)" class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                              </div>
+                            </template>
+                            <!-- end add to favorites -->
+                          </button>
+                          <button @click="$store.modal.open(movie.id)" class="cursor-pointer ml-auto group/item w-6 h-6 lg:w-10 lg:h-10 border-white border-2 rounded-full flex justify-center items-center transition hover:border-neutral-300">
+                            <div class="text-white group-hover/item:text-neutral-300 w-4 lg:w-6"> <!-- down arrow to open info modal -->
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                              </svg>
+                            </div> <!-- down arrow -->
+                          </button>
+                        </div>
+                        <p class="text-green-400 font-semibold mt-4">
+                          New <span class="text-white">2023</span>
+                        </p>
+                        <div class="flex flex-row mt-4 gap-2 items-center">
+                          <p class="text-white text-[10px] lg:text-sm" x-text="movie.duration"></p>
+                        </div>
+                        <div class="flex flex-row mt-4 gap-2 items-center">
+                          <p class="text-white text-[8px] lg:text-sm" x-text="movie.genre"></p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template> <!--movie card -->
+              </div>
+            </div>
+          </article>
+      </section>
+      <section x-model="favorites">
+          <article class="pb-40">
+            <div class="px-4 md:px-12 mt-4 space-y-8">
+              <p class="text-white text-md md:text-xl lg:text-2xl font-semibold mb-4">My List</p>
+              <div class="grid grid-cols-4 gap-2">
+                <template x-for="movie in favorites" :key="movie.id">
                   <div class="group bg-zinc-900 col-span relative h-[12vw]">
                     <img @click="playMovie(movie.id)" :src="movie.thumbnailUrl" alt="Thumbnail" draggable="false"
                          class="cursor-pointer object-cover transition duration shadow-xl rounded-md group-hover:opacity-90 sm:group-hover:opacity-0 delay-300 w-full h-[12vw]">
@@ -284,7 +346,6 @@
               </div>
             </div>
           </article>
-        </template> <!-- movie lists -->
       </section>
     </main>
   </body>
