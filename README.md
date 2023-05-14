@@ -12,5 +12,6 @@ This is meant to test out some new technologies we were considering using for th
 To test it out:
  1. `git clone git@github.com:beachglasslabs/demo-jax.git`
  2. `npm install` to install npm packages
- 3. instantiate the Julia packages (use `add Umbrella#main` for [Umbrella](https://github.com/jiachengzhang1/Umbrella.jl)) 
- 4. `npm run dev` to start the server
+ 3. instantiate the Julia packages (use `add Umbrella#main` for [Umbrella](https://github.com/jiachengzhang1/Umbrella.jl))
+ 4. `cp env.sample .env` and then optionally fill out the oauth2 information from github and google
+ 5. `npm run dev` to start the server
