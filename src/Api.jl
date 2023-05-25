@@ -181,7 +181,7 @@ end
     end
 end
 
-@get "/oauth2/google" function(_::HTTP.Request)
+@get "/oauth2/google/redirect" function(_::HTTP.Request)
     println("redirect google auth")
     state = newSessionId()
     google = init(:google, googleOptions(state))
@@ -189,7 +189,7 @@ end
     google.redirect()
 end
 
-@get "/oauth2/github" function(_::HTTP.Request)
+@get "/oauth2/github/redirect" function(_::HTTP.Request)
     println("redirect github auth")
     state = newSessionId()
     github = init(:github, githubOptions(state))
@@ -197,7 +197,7 @@ end
     github.redirect()
 end
 
-@get "/api/auth/callback/google" function(req::HTTP.Request)
+@get "/oauth2/google/callback" function(req::HTTP.Request)
     query_params = queryparams(req)
     code = query_params["code"]
     state = query_params["state"]
@@ -226,7 +226,7 @@ end
     end
 end
 
-@get "/api/auth/callback/github" function(req::HTTP.Request)
+@get "/oauth2/github/callback" function(req::HTTP.Request)
     query_params = queryparams(req)
     code = query_params["code"]
     state = query_params["state"]

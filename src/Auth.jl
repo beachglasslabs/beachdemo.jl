@@ -16,7 +16,7 @@ function googleOptions(session::Union{String, Nothing} = nothing)
     Configuration.Options(;
         client_id = ENV["GOOGLE_ID"],
         client_secret = ENV["GOOGLE_SECRET"],
-        redirect_uri = SERVER_URL * "/api/auth/callback/google",
+        redirect_uri = SERVER_URL * "/oauth2/google/callback",
         success_redirect = "/",
         failure_redirect = AUTH_URL,
         scopes = ["profile", "openid", "email"],
@@ -29,7 +29,7 @@ function githubOptions(session::Union{String, Nothing} = nothing)
     Configuration.Options(;
         client_id = ENV["GITHUB_ID"],
         client_secret = ENV["GITHUB_SECRET"],
-        redirect_uri = SERVER_URL * "/api/auth/callback/github",
+        redirect_uri = SERVER_URL * "/oauth2/github/callback",
         success_redirect = "/",
         failure_redirect = AUTH_URL,
         scopes = ["user", "email", "profile"],
