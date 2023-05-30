@@ -1,6 +1,6 @@
 name = "Beachglass"
 uuid = "4698366b-76e0-4479-819a-780a96231a0a"
-authors = ["Ed Yu <ed@beachglasslabs.org>"]
+authors = ["Ed Yu <edyu@noreply.users.github.com>"]
 version = "0.1.0"
 
 [deps]
